@@ -1,7 +1,6 @@
 <template>
 	<div class="calendar">
 		<portal to="layout-options">
-
 			<div class="layout-option">
 				<v-tabs v-model="isDatetimeTabs">
 					<v-tab style="padding: unset;">{{ $t('layouts.calendar.date-time') }}</v-tab>

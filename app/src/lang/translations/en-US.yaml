@@ -1107,3 +1107,9 @@ layouts:
     cozy: Cozy
   calendar:
     calendar: Calendar
+    date: Date,
+    time: Time,
+    datetime: Datetime,
+    title: Title,
+    color: Color,
+    today: Today

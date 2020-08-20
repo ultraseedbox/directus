@@ -2,42 +2,105 @@
 	<div class="calendar">
 		<portal to="layout-options">
 			<div class="layout-option">
+				<v-tabs v-model="isDatetimeTabs">
+					<v-tab>Date & Time</v-tab>
+					<v-tab>Datetime</v-tab>
+				</v-tabs>
+			</div>
+
+			<div class="layout-option" v-show="isDatetime">
 				<div class="option-label">{{ $t('layouts.calendar.datetime') }}</div>
 				<v-select
-					v-model="datetime"
+					v-model="date"
 					show-deselect
 					item-value="field"
 					item-text="name"
-					:items="availableFields"
+					:items="getFieldsWithType(['dateTime'])"
+				/>
+			</div>
+
+			<div class="layout-option" v-show="!isDatetime">
+				<div class="option-label">{{ $t('layouts.calendar.date') }}</div>
+				<v-select
+					v-model="date"
+					show-deselect
+					item-value="field"
+					item-text="name"
+					:items="getFieldsWithType(['date'])"
+				/>
+			</div>
+
+			<div class="layout-option" v-show="!isDatetime">
+				<div class="option-label">{{ $t('layouts.calendar.time') }}</div>
+				<v-select
+					v-model="time"
+					show-deselect
+					item-value="field"
+					item-text="name"
+					:items="getFieldsWithType(['time'])"
 				/>
 			</div>
 
 			<div class="layout-option">
-				<div class="option-label">{{ $t('layouts.calendar.date') }}</div>
-				<v-select v-model="date" show-deselect item-value="field" item-text="name" :items="availableFields" />
-			</div>
-
-			<div class="layout-option">
-				<div class="option-label">{{ $t('layouts.calendar.time') }}</div>
-				<v-select v-model="time" show-deselect item-value="field" item-text="name" :items="availableFields" />
-			</div>
-
-			<div class="layout-option">
 				<div class="option-label">{{ $t('layouts.calendar.title') }}</div>
-				<v-select v-model="title" show-deselect item-value="field" item-text="name" :items="availableFields" />
+				<v-select
+					v-model="title"
+					show-deselect
+					item-value="field"
+					item-text="name"
+					:items="getFieldsWithType(['string'])"
+				/>
 			</div>
 
 			<div class="layout-option">
 				<div class="option-label">{{ $t('layouts.calendar.color') }}</div>
-				<v-select v-model="color" show-deselect item-value="field" item-text="name" :items="availableFields" />
+				<v-select
+					v-model="color"
+					show-deselect
+					item-value="field"
+					item-text="name"
+					:items="getFieldsWithType(['string'])"
+				/>
 			</div>
 		</portal>
-		<div v-for="item in items" :key="item.title">{{ item.title }}</div>
+		<div class="header">
+			<div class="header-start">
+				<div class="currentDate">
+					{{ $t('months.' + monthNames[currentDate.getMonth()]) }} {{ currentDate.getFullYear() }}
+				</div>
+				<div>
+					<v-icon name="arrow_back" @click.native="backwards"></v-icon>
+					<v-icon name="arrow_forward" @click.native="forwards"></v-icon>
+				</div>
+			</div>
+			<div class="header-center">
+				<v-tabs v-model="viewType">
+					<v-tab value="month">MONTH</v-tab>
+					<v-tab value="week">WEEK</v-tab>
+					<v-tab value="day">DAY</v-tab>
+				</v-tabs>
+			</div>
+			<div class="header-end">
+				<v-button @click="resetCurrentDate" :disabled="isSameMonth(new Date(), currentDate)">
+					{{ $t('layouts.calendar.today').toUpperCase() }}
+				</v-button>
+			</div>
+		</div>
+		<div class="view">
+			<transition :name="swipeTo">
+				<component
+					:is="viewType[0]"
+					:key="currentDate.toString()"
+					class="view-element"
+					:currentDate="currentDate"
+				></component>
+			</transition>
+		</div>
 	</div>
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, toRefs, inject, computed, ref } from '@vue/composition-api';
+import { defineComponent, PropType, toRefs, inject, computed, ref, watch } from '@vue/composition-api';
 import { Filter } from '@/types';
 import useSync from '@/composables/use-sync/';
 import useCollection from '@/composables/use-collection/';
@@ -49,10 +112,15 @@ import i18n from '@/lang';
 import adjustFieldsForDisplays from '@/utils/adjust-fields-for-displays';
 import useElementSize from '@/composables/use-element-size';
 import { clone } from 'lodash';
+import { monthNames, isSameDay, isSameMonth } from './time';
+import Day from './components/day.vue';
+import Week from './components/week.vue';
+import Month from './components/month.vue';
 
 type Item = Record<string, any>;
 
 type ViewOptions = {
+	isDatetime: boolean;
 	datetime?: string;
 	date?: string;
 	time?: string;
@@ -67,7 +135,7 @@ type ViewQuery = {
 };
 
 export default defineComponent({
-	components: {},
+	components: { Month, Week, Day },
 	props: {
 		collection: {
 			type: String,
@@ -123,32 +191,45 @@ export default defineComponent({
 
 		const availableFields = computed(() => fieldsInCollection.value.filter((field) => field.meta.hidden !== true));
 
-		const datetimeFields = computed(() => {
-			return availableFields.value.filter((field) => {
-				if (field.field === '$file') return true;
+		const { isDatetime, date, time, datetime, title, color } = useViewOptions();
+		const { sort, limit, fields } = useViewQuery();
 
-				const relation = relationsStore.state.relations.find((relation) => {
-					return (
-						relation.many_collection === props.collection &&
-						relation.many_field === field.field &&
-						relation.one_collection === 'directus_files'
-					);
-				});
-
-				return !!relation;
-			});
+		const isDatetimeTabs = computed({
+			get() {
+				return [Number(isDatetime.value)];
+			},
+			set(newValue: number[]) {
+				isDatetime.value = Boolean(newValue[0]);
+			},
 		});
-
-		const { date, time, datetime, title, color } = useViewOptions();
-		const { sort, limit, page, fields } = useViewQuery();
 
 		const { items, loading, error, totalPages, itemCount, getItems } = useItems(collection, {
 			sort,
 			limit,
-			page: null,
+			page: ref(0),
 			fields: fields,
 			filters: _filters,
 			searchQuery,
+		});
+
+		const currentDate = ref(new Date());
+		const swipeTo = ref<'left' | 'right' | 'top' | 'bottom'>('left');
+		const _viewType = ref<Array<'month' | 'week' | 'day'>>(['month']);
+
+		const viewType = computed({
+			get() {
+				return _viewType.value;
+			},
+			set(newVal: Array<'month' | 'week' | 'day'>) {
+				const typeToInt = {
+					month: 1,
+					week: 2,
+					day: 3,
+				};
+
+				swipeTo.value = typeToInt[newVal[0]] < typeToInt[_viewType.value[0]] ? 'top' : 'bottom';
+				_viewType.value = newVal;
+			},
 		});
 
 		return {
@@ -157,12 +238,11 @@ export default defineComponent({
 			loading,
 			error,
 			totalPages,
-			page,
 			itemCount,
 			availableFields,
 			limit,
 			primaryKeyField,
-			datetimeFields,
+			getFieldsWithType,
 			title,
 			color,
 			datetime,
@@ -173,16 +253,73 @@ export default defineComponent({
 			_filters,
 			info,
 			layoutElement,
+			isDatetimeTabs,
+			isDatetime,
+			swipeTo,
+			viewType,
+			currentDate,
+			monthNames,
+			forwards,
+			backwards,
+			resetCurrentDate,
+			isSameDay,
+			isSameMonth,
 		};
 
+		function resetCurrentDate() {
+			const now = new Date();
+			const newDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+			swipeTo.value = newDate < currentDate.value ? 'left' : 'right';
+			currentDate.value = newDate;
+		}
+
+		function forwards() {
+			swipeTo.value = 'right';
+			let [month, day] = [currentDate.value.getMonth(), currentDate.value.getDate()];
+			switch (viewType.value[0]) {
+				case 'month':
+					month++;
+					break;
+				case 'week':
+					day += 7;
+					break;
+				case 'day':
+					day++;
+					break;
+			}
+			currentDate.value = new Date(currentDate.value.getFullYear(), month, day);
+		}
+
+		function backwards() {
+			swipeTo.value = 'left';
+			let [month, day] = [currentDate.value.getMonth(), currentDate.value.getDate()];
+			switch (viewType.value[0]) {
+				case 'month':
+					month--;
+					break;
+				case 'week':
+					day -= 7;
+					break;
+				case 'day':
+					day--;
+					break;
+			}
+			currentDate.value = new Date(currentDate.value.getFullYear(), month, day);
+		}
+
+		function getFieldsWithType(types: string[]) {
+			return availableFields.value.filter((field) => types.includes(field.type));
+		}
+
 		function useViewOptions() {
+			const isDatetime = createViewOption<boolean>('isDatetime', true);
 			const datetime = createViewOption<string>('datetime', null);
 			const date = createViewOption<string>('date', null);
 			const time = createViewOption<string>('time', null);
 			const title = createViewOption<string>('title', null);
 			const color = createViewOption<string>('color', null);
 
-			return { datetime, date, time, title, color };
+			return { datetime, date, time, title, color, isDatetime };
 
 			function createViewOption<T>(key: keyof ViewOptions, defaultValue: any) {
 				return computed<T>({
@@ -205,41 +342,9 @@ export default defineComponent({
 			const sort = createViewQueryOption<string>('sort', availableFields.value[0].field);
 			const limit = createViewQueryOption<number>('limit', 500);
 
-			const fields = computed<string[]>(() => {
-				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-				const fields = [primaryKeyField.value!.field];
+			const fields = createViewQueryOption<Array<string>>('fields', ['*']);
 
-				if (imageSource.value) {
-					fields.push(`${imageSource.value}.type`);
-					fields.push(`${imageSource.value}.filename_disk`);
-					fields.push(`${imageSource.value}.storage`);
-					fields.push(`${imageSource.value}.id`);
-				}
-
-				if (props.collection === 'directus_files' && imageSource.value === '$file') {
-					fields.push('type');
-				}
-
-				const sortField = sort.value.startsWith('-') ? sort.value.substring(1) : sort.value;
-
-				if (fields.includes(sortField) === false) {
-					fields.push(sortField);
-				}
-
-				const titleSubtitleFields: string[] = [];
-
-				if (title.value) {
-					titleSubtitleFields.push(...getFieldsFromTemplate(title.value));
-				}
-
-				if (subtitle.value) {
-					titleSubtitleFields.push(...getFieldsFromTemplate(subtitle.value));
-				}
-
-				return [...fields, ...adjustFieldsForDisplays(titleSubtitleFields, props.collection)];
-			});
-
-			return { sort, limit, page, fields };
+			return { sort, limit, fields };
 
 			function createViewQueryOption<T>(key: keyof ViewQuery, defaultValue: any) {
 				return computed<T>({
@@ -247,7 +352,6 @@ export default defineComponent({
 						return _viewQuery.value?.[key] || defaultValue;
 					},
 					set(newValue: T) {
-						page.value = 1;
 						_viewQuery.value = {
 							..._viewQuery.value,
 							[key]: newValue,
@@ -259,3 +363,92 @@ export default defineComponent({
 	},
 });
 </script>
+
+<style lang="scss" scoped>
+.calendar {
+	display: flex;
+	flex-direction: column;
+	height: calc(100% - var(--layout-offset-top) * 2);
+	overflow: hidden;
+
+	.header {
+		z-index: 10;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		height: 64px;
+		padding: 0 20px;
+
+		&-start {
+			display: flex;
+			align-items: center;
+			font-size: 18px;
+
+			.v-icon {
+				cursor: pointer;
+			}
+
+			.currentDate {
+				width: 180px;
+			}
+		}
+
+		&-center {
+			.v-tabs {
+				display: flex;
+				width: 300px;
+			}
+		}
+	}
+
+	.view {
+		position: relative;
+		width: 100%;
+		height: calc(100% - 64px);
+		overflow: hidden;
+		background-color: var(--background-normal-alt);
+
+		&-element {
+			position: absolute;
+			top: 0;
+			left: 0;
+			transition: transform 500ms;
+
+			&.left-enter {
+				transform: translate(-100%);
+			}
+			&.left-leave-to {
+				transform: translate(100%);
+			}
+			&.right-enter {
+				transform: translate(100%);
+			}
+			&.right-leave-to {
+				transform: translate(-100%);
+			}
+			&.top-enter {
+				transform: translate(0, -100%);
+			}
+			&.top-leave-to {
+				transform: translate(0, 100%);
+			}
+			&.bottom-enter {
+				transform: translate(0, 100%);
+			}
+			&.bottom-leave-to {
+				transform: translate(0, -100%);
+			}
+			&.left-enter-active
+			.left-leave-active
+			.right-enter-active
+			.right-leave-active
+			.top-enter-active
+			.top-leave-active
+			.bottom-enter-active
+			.bottom-leave-active {
+				transform: translate(0);
+			}
+		}
+	}
+}
+</style>

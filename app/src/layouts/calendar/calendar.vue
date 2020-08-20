@@ -11,7 +11,7 @@
 			<div class="layout-option" v-if="isDatetime">
 				<div class="option-label">{{ $t('layouts.calendar.datetime') }}</div>
 				<v-select
-					v-model="datetime"
+					v-model="date"
 					show-deselect
 					item-value="field"
 					item-text="name"

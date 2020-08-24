@@ -76,12 +76,12 @@
 			<div class="header-center">
 				<v-tabs v-model="viewType">
 					<v-tab value="month">MONTH</v-tab>
-					<v-tab value="week">WEEK</v-tab>
-					<v-tab value="day">DAY</v-tab>
+					<v-tab value="week" :disabled="['month'].includes(viewType[0]) && false">WEEK</v-tab>
+					<v-tab value="day" :disabled="['month', 'week'].includes(viewType[0]) && false">DAY</v-tab>
 				</v-tabs>
 			</div>
 			<div class="header-end">
-				<v-button @click="resetCurrentDate" :disabled="isSameMonth(new Date(), currentDate)">
+				<v-button @click="resetCurrentDate" :disabled="isSameInterval()">
 					{{ $t('layouts.calendar.today').toUpperCase() }}
 				</v-button>
 			</div>
@@ -112,7 +112,7 @@ import i18n from '@/lang';
 import adjustFieldsForDisplays from '@/utils/adjust-fields-for-displays';
 import useElementSize from '@/composables/use-element-size';
 import { clone } from 'lodash';
-import { monthNames, isSameDay, isSameMonth } from './time';
+import { monthNames, isSameDay, isSameMonth, isSameWeek } from './time';
 import Day from './components/day.vue';
 import Week from './components/week.vue';
 import Month from './components/month.vue';
@@ -264,7 +264,19 @@ export default defineComponent({
 			resetCurrentDate,
 			isSameDay,
 			isSameMonth,
+			isSameInterval,
 		};
+
+		function isSameInterval() {
+			switch (viewType.value[0]) {
+				case 'month':
+					return isSameMonth(new Date(), currentDate.value);
+				case 'week':
+					return isSameWeek(new Date(), currentDate.value);
+				case 'day':
+					return isSameDay(new Date(), currentDate.value);
+			}
+		}
 
 		function resetCurrentDate() {
 			const now = new Date();

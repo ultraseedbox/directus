@@ -8,7 +8,7 @@
 		>
 			<div class="header">
 				<div v-if="index < 8" class="header-week">{{ $t('weeks.' + getWeek(index)).substr(0, 3) }}</div>
-				<div class="header-day" :class="{ today: isSameDay(today, getDate(index)) }">
+				<div class="header-day" :class="{ today: isSameDay(new Date(), getDate(index)) }">
 					{{ getDate(index).getDate() }}
 				</div>
 			</div>
@@ -32,8 +32,6 @@ export default defineComponent({
 		},
 	},
 	setup(props) {
-		const today = new Date();
-
 		const monthBegin = computed(() => {
 			const cDate = props.currentDate;
 			const day = new Date(cDate.getFullYear(), cDate.getMonth(), 1).getDay();
@@ -46,7 +44,6 @@ export default defineComponent({
 		});
 
 		return {
-			today,
 			getDate,
 			getWeek,
 			isSameDay,

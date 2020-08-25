@@ -11,7 +11,7 @@
 			<div class="layout-option" v-if="isDatetime">
 				<div class="option-label">{{ $t('layouts.calendar.datetime') }}</div>
 				<v-select
-					v-model="date"
+					v-model="datetime"
 					show-deselect
 					item-value="field"
 					item-text="name"
@@ -72,6 +72,9 @@
 				<div class="currentDate">
 					<span v-show="viewType !== 'year'">{{ $t('months.' + monthNames[currentDate.getMonth()]) }}</span>
 					<v-select v-model="selectedYear" :items="yearOptions" inline></v-select>
+				</div>
+				<div class="currentDate">
+					{{ $t('months.' + monthNames[currentDate.getMonth()]) }} {{ currentDate.getFullYear() }}
 				</div>
 			</div>
 			<div class="header-center"></div>
@@ -371,6 +374,26 @@ export default defineComponent({
 
 		function getLinkForItem(item: Record<string, any>) {
 			return `/collections/${props.collection}/${item[primaryKeyField.value.field]}`;
+		}
+
+		function updateFilters() {
+			if (dateField.value == null) return;
+
+			const from = interval.value.getStart().toISOString();
+			const to = interval.value.getEnd().toISOString();
+			_filters.value = [
+				{
+					field: dateField.value,
+					value: from + ',' + to,
+					key: 'calendar-date',
+					operator: 'between',
+					locked: true,
+				},
+			];
+		}
+
+		function getLinkForItem(item: Record<string, any>) {
+			return `/collections/${props.collection}/${item[primaryKeyField.value!.field]}`;
 		}
 
 		function updateFilters() {

@@ -11,7 +11,7 @@
 			<div class="layout-option" v-show="isDatetime">
 				<div class="option-label">{{ $t('layouts.calendar.datetime') }}</div>
 				<v-select
-					v-model="date"
+					v-model="datetime"
 					show-deselect
 					item-value="field"
 					item-text="name"
@@ -65,12 +65,12 @@
 		</portal>
 		<div class="header">
 			<div class="header-start">
-				<div class="currentDate">
-					{{ $t('months.' + monthNames[currentDate.getMonth()]) }} {{ currentDate.getFullYear() }}
-				</div>
 				<div>
 					<v-icon name="arrow_back" @click.native="backwards"></v-icon>
 					<v-icon name="arrow_forward" @click.native="forwards"></v-icon>
+				</div>
+				<div class="currentDate">
+					{{ $t('months.' + monthNames[currentDate.getMonth()]) }} {{ currentDate.getFullYear() }}
 				</div>
 			</div>
 			<div class="header-center">
@@ -81,7 +81,7 @@
 				</v-tabs>
 			</div>
 			<div class="header-end">
-				<v-button @click="resetCurrentDate" :disabled="isSameInterval()">
+				<v-button @click="resetCurrentDate" :disabled="interval.isInInterval(new Date())">
 					{{ $t('layouts.calendar.today').toUpperCase() }}
 				</v-button>
 			</div>
@@ -92,7 +92,9 @@
 					:is="viewType[0]"
 					:key="currentDate.toString()"
 					class="view-element"
-					:currentDate="currentDate"
+					:interval="interval"
+					:viewOptions="viewOptions"
+					:items="itemsWithLink"
 				></component>
 			</transition>
 		</div>
@@ -100,7 +102,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, toRefs, inject, computed, ref, watch } from '@vue/composition-api';
+import { defineComponent, PropType, toRefs, inject, computed, ref, watch, onMounted } from '@vue/composition-api';
 import { Filter } from '@/types';
 import useSync from '@/composables/use-sync/';
 import useCollection from '@/composables/use-collection/';
@@ -112,14 +114,14 @@ import i18n from '@/lang';
 import adjustFieldsForDisplays from '@/utils/adjust-fields-for-displays';
 import useElementSize from '@/composables/use-element-size';
 import { clone } from 'lodash';
-import { monthNames, isSameDay, isSameMonth, isSameWeek } from './time';
+import { monthNames, isSameDay, isSameMonth, isSameWeek, Interval } from './time';
 import Day from './components/day.vue';
 import Week from './components/week.vue';
 import Month from './components/month.vue';
 
 type Item = Record<string, any>;
 
-type ViewOptions = {
+export type ViewOptions = {
 	isDatetime: boolean;
 	datetime?: string;
 	date?: string;
@@ -175,6 +177,10 @@ export default defineComponent({
 		},
 	},
 	setup(props, { emit }) {
+		onMounted(() => {
+			updateFilters();
+		});
+
 		const relationsStore = useRelationsStore();
 
 		const layoutElement = ref<HTMLElement | null>(null);
@@ -212,15 +218,24 @@ export default defineComponent({
 			searchQuery,
 		});
 
-		const currentDate = ref(new Date());
+		const _currentDate = ref(new Date());
+		const currentDate = computed({
+			get() {
+				return _currentDate.value;
+			},
+			set(newDate: Date) {
+				_currentDate.value = newDate;
+				updateFilters();
+			},
+		});
 		const swipeTo = ref<'left' | 'right' | 'top' | 'bottom'>('left');
-		const _viewType = ref<Array<'month' | 'week' | 'day'>>(['month']);
+		const _viewType = ref<Array<Interval.Type>>([Interval.Type.MONTH]);
 
 		const viewType = computed({
 			get() {
 				return _viewType.value;
 			},
-			set(newVal: Array<'month' | 'week' | 'day'>) {
+			set(newVal: Array<Interval.Type>) {
 				const typeToInt = {
 					month: 1,
 					week: 2,
@@ -229,12 +244,27 @@ export default defineComponent({
 
 				swipeTo.value = typeToInt[newVal[0]] < typeToInt[_viewType.value[0]] ? 'top' : 'bottom';
 				_viewType.value = newVal;
+				updateFilters();
 			},
+		});
+
+		const interval = computed(() => new Interval(currentDate.value, viewType.value[0]));
+		const dateField = computed(() => (isDatetime.value ? datetime.value : date.value));
+
+		const itemsWithLink = computed(() => {
+			const itemRef: Record<string, any>[] = items.value;
+
+			const itemList: Record<string, any>[] = [];
+			itemRef.forEach((item) => {
+				item['__link__'] = getLinkForItem(item);
+				itemList.push(item);
+			});
+			return itemList;
 		});
 
 		return {
 			_selection,
-			items,
+			itemsWithLink,
 			loading,
 			error,
 			totalPages,
@@ -264,19 +294,8 @@ export default defineComponent({
 			resetCurrentDate,
 			isSameDay,
 			isSameMonth,
-			isSameInterval,
+			interval,
 		};
-
-		function isSameInterval() {
-			switch (viewType.value[0]) {
-				case 'month':
-					return isSameMonth(new Date(), currentDate.value);
-				case 'week':
-					return isSameWeek(new Date(), currentDate.value);
-				case 'day':
-					return isSameDay(new Date(), currentDate.value);
-			}
-		}
 
 		function resetCurrentDate() {
 			const now = new Date();
@@ -319,6 +338,26 @@ export default defineComponent({
 			currentDate.value = new Date(currentDate.value.getFullYear(), month, day);
 		}
 
+		function getLinkForItem(item: Record<string, any>) {
+			return `/collections/${props.collection}/${item[primaryKeyField.value!.field]}`;
+		}
+
+		function updateFilters() {
+			if (dateField.value == null) return;
+
+			const from = interval.value.getStart().toISOString();
+			const to = interval.value.getEnd().toISOString();
+			_filters.value = [
+				{
+					field: dateField.value,
+					value: from + ',' + to,
+					key: 'calendar-date',
+					operator: 'between',
+					locked: true,
+				},
+			];
+		}
+
 		function getFieldsWithType(types: string[]) {
 			return availableFields.value.filter((field) => types.includes(field.type));
 		}
@@ -351,7 +390,11 @@ export default defineComponent({
 		function useViewQuery() {
 			const date = ref(new Date(Date.now()));
 
-			const sort = createViewQueryOption<string>('sort', availableFields.value[0].field);
+			const sortField = isDatetime.value ? datetime.value : date.value;
+			const sort = createViewQueryOption<string>(
+				'sort',
+				'-' + availableFields.value.find((f) => f.field == sortField)?.field
+			);
 			const limit = createViewQueryOption<number>('limit', 500);
 
 			const fields = createViewQueryOption<Array<string>>('fields', ['*']);
@@ -401,7 +444,8 @@ export default defineComponent({
 			}
 
 			.currentDate {
-				width: 180px;
+				width: 150px;
+				margin-left: 10px;
 			}
 		}
 

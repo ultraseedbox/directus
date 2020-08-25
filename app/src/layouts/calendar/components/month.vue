@@ -4,7 +4,7 @@
 			v-for="index in 42"
 			:key="index"
 			class="months-day"
-			:class="{ hidden: !isSameMonth(currentDate, getDate(index)) }"
+			:class="{ hidden: !interval.isInInterval(getDate(index)) }"
 		>
 			<div class="header">
 				<div v-if="index < 8" class="header-week">{{ $t('weeks.' + getWeek(index)).substr(0, 3) }}</div>
@@ -12,18 +12,34 @@
 					{{ getDate(index).getDate() }}
 				</div>
 			</div>
+			<div class="events">
+				<event
+					v-for="event in getEvents(index)"
+					:key="event.id"
+					:item="event"
+					:viewOptions="viewOptions"
+				></event>
+			</div>
 		</div>
 	</div>
 </template>
 
 <script lang="ts">
 import { defineComponent, PropType, computed, ref } from '@vue/composition-api';
-import { weekNames, isSameDay, isSameMonth } from '../time';
+import { weekNames, isSameDay, Interval } from '../time';
+import { ViewOptions } from '../calendar.vue';
+import Event from './event.vue';
+import { isSaturday } from 'date-fns';
 
 export default defineComponent({
+	components: { Event },
 	props: {
-		currentDate: {
-			type: Date as PropType<Date>,
+		interval: {
+			type: Interval,
+			required: true,
+		},
+		viewOptions: {
+			type: Object as PropType<ViewOptions>,
 			required: true,
 		},
 		items: {
@@ -32,27 +48,29 @@ export default defineComponent({
 		},
 	},
 	setup(props) {
-		const monthBegin = computed(() => {
-			const cDate = props.currentDate;
-			const day = new Date(cDate.getFullYear(), cDate.getMonth(), 1).getDay();
-			return day == 0 ? 7 : day;
-		});
+		const currentMonth = ref(props.interval);
 
-		const monthLength = computed(() => {
-			const cDate = props.currentDate;
-			return new Date(cDate.getFullYear(), cDate.getMonth(), 1).getDate();
+		const monthBegin = computed(() => {
+			const day = currentMonth.value.getStart().getDay();
+			return day == 0 ? 7 : day;
 		});
 
 		return {
 			getDate,
 			getWeek,
 			isSameDay,
-			isSameMonth,
+			getEvents,
 		};
 
+		function getEvents(index: number) {
+			const date = getDate(index);
+			const dateField = props.viewOptions.isDatetime ? props.viewOptions.datetime : props.viewOptions.date;
+			if (dateField == undefined) return;
+			return props.items.filter((i) => isSameDay(new Date(i[dateField]), date));
+		}
+
 		function getDate(index: number) {
-			const cDate = props.currentDate;
-			return new Date(cDate.getFullYear(), cDate.getMonth(), index - monthBegin.value + 1);
+			return currentMonth.value.getDate(index - monthBegin.value);
 		}
 
 		function getWeek(index: number) {
@@ -72,6 +90,7 @@ export default defineComponent({
 	border: 1px solid var(--background-normal-alt);
 
 	&-day {
+		overflow: hidden;
 		background-color: var(--background-page);
 
 		&.hidden {
@@ -80,7 +99,7 @@ export default defineComponent({
 
 		.header {
 			width: 100%;
-			padding: 10px 5px;
+			padding: 5px 3px;
 			font-weight: 400;
 			font-size: 1.3em;
 
@@ -102,6 +121,15 @@ export default defineComponent({
 					border: 2px solid var(--foreground-normal);
 					border-radius: 50%;
 				}
+			}
+		}
+
+		.events {
+			max-width: 100%;
+			padding: 0 5%;
+
+			.event {
+				max-width: 90%;
 			}
 		}
 	}

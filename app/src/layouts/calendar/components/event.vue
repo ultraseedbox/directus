@@ -54,10 +54,23 @@ export default defineComponent({
 			return percent * 100;
 		});
 
+		const color = computed<string | undefined>(() => {
+			if (props.viewOptions.color && props.item[props.viewOptions.color]) {
+				return props.item[props.viewOptions.color];
+			}
+			return undefined;
+		});
+
 		const style = computed(() => {
-			if (props.absolute)
-				return { top: absolueTop.value + '%', transform: `translate(0, ${-absolueTop.value}%)` };
-			else return {};
+			const style: Record<string, any> = {};
+			if (props.absolute) {
+				style['top'] = absolueTop.value + '%';
+				style['transform'] = `translate(0, ${-absolueTop.value}%)`;
+			}
+			if (color.value) {
+				style['background-color'] = color.value;
+			}
+			return style;
 		});
 
 		return { style, onClick };
@@ -69,7 +82,7 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .event {
 	display: flex;
 	align-items: center;

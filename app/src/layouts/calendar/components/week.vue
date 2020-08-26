@@ -76,7 +76,7 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .week-wrapper {
 	width: 100%;
 	height: 100%;

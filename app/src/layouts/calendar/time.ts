@@ -52,6 +52,10 @@ class Interval {
 				this.start = new Date(year, month, 1);
 				this.end = new Date(year, month + 1, 1);
 				break;
+			case Interval.Type.AGENDA:
+				this.start = new Date(year, month, 1);
+				this.end = new Date(year, month + 1, 1);
+				break;
 			case Interval.Type.DAY:
 				this.start = new Date(year, month, date.getDate());
 				this.end = new Date(year, month, date.getDate() + 1);
@@ -83,6 +87,8 @@ class Interval {
 				return 7;
 			case Interval.Type.MONTH:
 				return new Date(this.end.getFullYear(), this.end.getMonth() + 1, 0).getDate();
+			case Interval.Type.AGENDA:
+				return new Date(this.end.getFullYear(), this.end.getMonth() + 1, 0).getDate();
 			case Interval.Type.DAY:
 				return 1;
 		}
@@ -95,5 +101,6 @@ namespace Interval {
 		MONTH = 'month',
 		WEEK = 'week',
 		DAY = 'day',
+		AGENDA = 'agenda',
 	}
 }

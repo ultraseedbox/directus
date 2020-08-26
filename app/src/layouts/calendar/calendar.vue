@@ -3,8 +3,8 @@
 		<portal to="layout-options">
 			<div class="layout-option">
 				<v-tabs v-model="isDatetimeTabs">
-					<v-tab>Date & Time</v-tab>
-					<v-tab>Datetime</v-tab>
+					<v-tab style="padding: unset;">Date & Time</v-tab>
+					<v-tab style="padding: unset;">Datetime</v-tab>
 				</v-tabs>
 			</div>
 
@@ -73,28 +73,26 @@
 					{{ $t('months.' + monthNames[currentDate.getMonth()]) }} {{ currentDate.getFullYear() }}
 				</div>
 			</div>
-			<div class="header-center">
-				<v-tabs v-model="viewType">
-					<v-tab value="month">MONTH</v-tab>
-					<v-tab value="week" :disabled="['month'].includes(viewType[0]) && false">WEEK</v-tab>
-					<v-tab value="day" :disabled="['month', 'week'].includes(viewType[0]) && false">DAY</v-tab>
-				</v-tabs>
-			</div>
+			<div class="header-center"></div>
 			<div class="header-end">
-				<v-button @click="resetCurrentDate" :disabled="interval.isInInterval(new Date())">
+				<v-button @click="resetCurrentDate" small :disabled="interval.isInInterval(new Date())">
 					{{ $t('layouts.calendar.today').toUpperCase() }}
+				</v-button>
+				<v-button class="dropdown" small>
+					<v-select v-model="viewType" :items="viewSelection" inline></v-select>
 				</v-button>
 			</div>
 		</div>
 		<div class="view">
 			<transition :name="swipeTo">
 				<component
-					:is="viewType[0]"
+					:is="viewType"
 					:key="currentDate.toString()"
 					class="view-element"
 					:interval="interval"
 					:viewOptions="viewOptions"
 					:items="itemsWithLink"
+					:collection="collection"
 				></component>
 			</transition>
 		</div>
@@ -118,10 +116,12 @@ import { monthNames, isSameDay, isSameMonth, isSameWeek, Interval } from './time
 import Day from './components/day.vue';
 import Week from './components/week.vue';
 import Month from './components/month.vue';
+import Agenda from './components/agenda.vue';
 
 type Item = Record<string, any>;
 
 export type ViewOptions = {
+	isAgenda?: boolean;
 	isDatetime: boolean;
 	datetime?: string;
 	date?: string;
@@ -137,7 +137,7 @@ type ViewQuery = {
 };
 
 export default defineComponent({
-	components: { Month, Week, Day },
+	components: { Month, Week, Day, Agenda },
 	props: {
 		collection: {
 			type: String,
@@ -197,7 +197,7 @@ export default defineComponent({
 
 		const availableFields = computed(() => fieldsInCollection.value.filter((field) => field.meta.hidden !== true));
 
-		const { isDatetime, date, time, datetime, title, color } = useViewOptions();
+		const { isAgenda, isDatetime, date, time, datetime, title, color } = useViewOptions();
 		const { sort, limit, fields } = useViewQuery();
 
 		const isDatetimeTabs = computed({
@@ -229,26 +229,34 @@ export default defineComponent({
 			},
 		});
 		const swipeTo = ref<'left' | 'right' | 'top' | 'bottom'>('left');
-		const _viewType = ref<Array<Interval.Type>>([Interval.Type.MONTH]);
+		const _viewType = ref<Interval.Type>(isAgenda ? Interval.Type.AGENDA : Interval.Type.MONTH);
 
 		const viewType = computed({
 			get() {
 				return _viewType.value;
 			},
-			set(newVal: Array<Interval.Type>) {
-				const typeToInt = {
-					month: 1,
-					week: 2,
-					day: 3,
-				};
+			set(newVal: Interval.Type) {
+				const typeToInt = { agenda: 0, month: 1, week: 2, day: 3 };
 
-				swipeTo.value = typeToInt[newVal[0]] < typeToInt[_viewType.value[0]] ? 'top' : 'bottom';
+				swipeTo.value = typeToInt[newVal] < typeToInt[_viewType.value] ? 'top' : 'bottom';
+
+				isAgenda.value = newVal == 'agenda';
+
 				_viewType.value = newVal;
 				updateFilters();
 			},
 		});
 
-		const interval = computed(() => new Interval(currentDate.value, viewType.value[0]));
+		const viewSelection = computed(() => {
+			return [
+				{ text: i18n.t('layouts.calendar.agenda'), value: 'agenda' },
+				{ text: i18n.t('layouts.calendar.month'), value: 'month' },
+				{ text: i18n.t('layouts.calendar.week'), value: 'week' },
+				{ text: i18n.t('layouts.calendar.day'), value: 'day' },
+			];
+		});
+
+		const interval = computed(() => new Interval(currentDate.value, viewType.value));
 		const dateField = computed(() => (isDatetime.value ? datetime.value : date.value));
 
 		const itemsWithLink = computed(() => {
@@ -295,6 +303,8 @@ export default defineComponent({
 			isSameDay,
 			isSameMonth,
 			interval,
+			isAgenda,
+			viewSelection,
 		};
 
 		function resetCurrentDate() {
@@ -307,7 +317,10 @@ export default defineComponent({
 		function forwards() {
 			swipeTo.value = 'right';
 			let [month, day] = [currentDate.value.getMonth(), currentDate.value.getDate()];
-			switch (viewType.value[0]) {
+			switch (viewType.value) {
+				case 'agenda':
+					month++;
+					break;
 				case 'month':
 					month++;
 					break;
@@ -317,6 +330,8 @@ export default defineComponent({
 				case 'day':
 					day++;
 					break;
+				default:
+					month++;
 			}
 			currentDate.value = new Date(currentDate.value.getFullYear(), month, day);
 		}
@@ -324,7 +339,10 @@ export default defineComponent({
 		function backwards() {
 			swipeTo.value = 'left';
 			let [month, day] = [currentDate.value.getMonth(), currentDate.value.getDate()];
-			switch (viewType.value[0]) {
+			switch (viewType.value) {
+				case 'agenda':
+					month--;
+					break;
 				case 'month':
 					month--;
 					break;
@@ -334,6 +352,8 @@ export default defineComponent({
 				case 'day':
 					day--;
 					break;
+				default:
+					month--;
 			}
 			currentDate.value = new Date(currentDate.value.getFullYear(), month, day);
 		}
@@ -363,6 +383,7 @@ export default defineComponent({
 		}
 
 		function useViewOptions() {
+			const isAgenda = createViewOption<boolean>('isAgenda', false);
 			const isDatetime = createViewOption<boolean>('isDatetime', true);
 			const datetime = createViewOption<string>('datetime', null);
 			const date = createViewOption<string>('date', null);
@@ -370,7 +391,7 @@ export default defineComponent({
 			const title = createViewOption<string>('title', null);
 			const color = createViewOption<string>('color', null);
 
-			return { datetime, date, time, title, color, isDatetime };
+			return { datetime, date, time, title, color, isDatetime, isAgenda };
 
 			function createViewOption<T>(key: keyof ViewOptions, defaultValue: any) {
 				return computed<T>({
@@ -395,6 +416,7 @@ export default defineComponent({
 				'sort',
 				'-' + availableFields.value.find((f) => f.field == sortField)?.field
 			);
+
 			const limit = createViewQueryOption<number>('limit', 500);
 
 			const fields = createViewQueryOption<Array<string>>('fields', ['*']);
@@ -449,10 +471,11 @@ export default defineComponent({
 			}
 		}
 
-		&-center {
-			.v-tabs {
-				display: flex;
-				width: 300px;
+		&-end {
+			display: flex;
+
+			.dropdown {
+				margin-left: 20px;
 			}
 		}
 	}

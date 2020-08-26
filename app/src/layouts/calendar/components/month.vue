@@ -80,7 +80,7 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .months {
 	display: grid;
 	grid-gap: 1px;

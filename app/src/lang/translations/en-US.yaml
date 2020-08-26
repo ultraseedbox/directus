@@ -1113,3 +1113,7 @@ layouts:
     title: Title,
     color: Color,
     today: Today
+    month: Month,
+    week: Week,
+    day: Day,
+    agenda: Agenda

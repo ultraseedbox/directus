@@ -1,7 +1,7 @@
 <template>
 	<div class="event" @click="onClick" :style="style" :class="{ absolute }">
 		<span class="title">{{ item[viewOptions.title] }}</span>
-		<span class="time">{{ item.datetime.substr(11, 5) }}</span>
+		<span v-if="time" class="time">{{ time.substr(0, 5) }}</span>
 	</div>
 </template>
 
@@ -30,22 +30,9 @@ export default defineComponent({
 	setup(props) {
 		const { viewOptions, item, absolute } = toRefs(props);
 		const absolueTop = computed(() => {
-			if (!props.absolute) return 0;
+			if (!props.absolute || !time.value) return 0;
 
-			const isDatetime = viewOptions.value.isDatetime;
-			const datetime = viewOptions.value.datetime;
-			const time = viewOptions.value.time;
-
-			let timeString = '00:00:00';
-
-			if (isDatetime) {
-				if (!datetime) return 0;
-				timeString = props.item[datetime].split(/(T|\.)/g)[2];
-			} else {
-				if (!time) return 0;
-				timeString = props.item[time];
-			}
-			const timeSections = timeString.split(':');
+			const timeSections = time.value.split(':');
 
 			const hours = Number(timeSections[0]),
 				minutes = Number(timeSections[1]);
@@ -73,7 +60,24 @@ export default defineComponent({
 			return style;
 		});
 
-		return { style, onClick };
+		const time = computed(() => {
+			const isDatetime = viewOptions.value.isDatetime;
+			const datetime = viewOptions.value.datetime;
+			const time = viewOptions.value.time;
+
+			let timeString = '00:00:00';
+
+			if (isDatetime) {
+				if (!datetime) return;
+				timeString = props.item[datetime].split(/(T|\.)/g)[2];
+			} else {
+				if (!time) return;
+				timeString = props.item[time];
+			}
+			return timeString;
+		});
+
+		return { style, onClick, time };
 
 		function onClick() {
 			router.push(props.item.__link__);

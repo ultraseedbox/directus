@@ -1,9 +1,11 @@
 <template>
 	<div class="week-wrapper">
-		<div class="week" :class="{ timeline: hasTimeline }">
+		<div class="week" :class="{ timeline: hasTimeline }" :style="{ '--week-days': days }">
 			<div class="spacer" v-show="hasTimeline"></div>
-			<div v-for="index in 7" :key="'headers-' + index" class="header">
-				<div class="header-week">{{ $t('weeks.' + weekNames[index - 1]).substr(0, 3) }}</div>
+			<div v-for="index in days" :key="'headers-' + index" class="header" @click="selectDay(index)">
+				<div class="header-week">
+					{{ $t('weeks.' + getWeekDay(getDate(index))).substr(0, days > 4 ? 3 : 100) }}
+				</div>
 				<div class="header-day" :class="{ today: isSameDay(today, getDate(index)) }">
 					{{ getDate(index).getDate() }}
 				</div>
@@ -11,13 +13,13 @@
 			<div class="timeline" v-show="hasTimeline">
 				<span v-for="i in 23" :key="i" :style="{ top: (i / 24) * 100 + '%' }">{{ i + ':00' }}</span>
 			</div>
-			<div v-for="index in 7" :key="'events-' + index" class="events">
+			<div v-for="index in days" :key="'events-' + index" class="events">
 				<event
 					v-for="event in getEvents(index)"
 					:key="event.id"
 					:item="event"
 					:viewOptions="viewOptions"
-					absolute
+					:absolute="viewOptions.time != null || viewOptions.datetime != null"
 				></event>
 			</div>
 		</div>
@@ -45,8 +47,12 @@ export default defineComponent({
 			type: Array as PropType<Record<string, any>[]>,
 			default: null,
 		},
+		days: {
+			type: Number,
+			default: 7,
+		},
 	},
-	setup(props) {
+	setup(props, { emit }) {
 		const today = new Date();
 
 		const currentWeek = ref(props.interval);
@@ -60,6 +66,8 @@ export default defineComponent({
 			today,
 			getEvents,
 			hasTimeline,
+			getWeekDay,
+			selectDay,
 		};
 
 		function getEvents(index: number) {
@@ -69,8 +77,16 @@ export default defineComponent({
 			return props.items.filter((i) => isSameDay(new Date(i[dateField]), date));
 		}
 
+		function getWeekDay(date: Date) {
+			return weekNames[date.getDay() == 0 ? 6 : date.getDay() - 1];
+		}
+
 		function getDate(index: number) {
 			return currentWeek.value.getDate(index - 1);
+		}
+		function selectDay(index: number) {
+			const date = getDate(index);
+			emit('changeView', { date, type: Interval.Type.DAY });
 		}
 	},
 });
@@ -85,12 +101,12 @@ export default defineComponent({
 
 	.week {
 		display: grid;
-		grid-template: 75px 1fr / repeat(7, 1fr);
+		grid-template: 75px 1fr / repeat(var(--week-days), 1fr);
 		width: 100%;
 		min-height: 200%;
 
 		&.timeline {
-			grid-template: 75px 1fr / 40px repeat(7, 1fr);
+			grid-template: 75px 1fr / 40px repeat(var(--week-days), 1fr);
 		}
 
 		.spacer {
@@ -134,6 +150,11 @@ export default defineComponent({
 			font-weight: 400;
 			font-size: 1.3em;
 			background-color: var(--background-page);
+
+			&:hover {
+				background-color: var(--background-subdued);
+				cursor: pointer;
+			}
 
 			&-week {
 				width: 32px;

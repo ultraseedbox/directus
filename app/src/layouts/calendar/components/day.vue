@@ -1,25 +1,15 @@
 <template>
-	<div class="day">
-		<div class="header">
-			<div class="header-week">{{ $t('weeks.' + weekNames[currentDay]) }}</div>
-			<div class="header-day" :class="{ today: interval.isInInterval(new Date()) }">
-				{{ interval.getStart().getDate() }}
-			</div>
-		</div>
-		<div class="events">
-			<event v-for="item in items" :key="item.id" :item="item" :viewOptions="viewOptions"></event>
-		</div>
-	</div>
+	<week :interval="interval" :viewOptions="viewOptions" :items="items" :days="1"></week>
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, computed } from '@vue/composition-api';
-import { weekNames, isSameDay, Interval } from '../time';
+import { defineComponent, PropType } from '@vue/composition-api';
+import { Interval } from '../time';
 import { ViewOptions } from '../calendar.vue';
-import Event from './event.vue';
+import Week from './week.vue';
 
 export default defineComponent({
-	components: { Event },
+	components: { Week },
 	props: {
 		interval: {
 			type: Interval,
@@ -34,45 +24,5 @@ export default defineComponent({
 			default: null,
 		},
 	},
-	setup(props) {
-		const currentDay = computed(() => {
-			const day = props.interval.getStart().getDay();
-			return day == 0 ? 6 : day - 1;
-		});
-
-		return { weekNames, isSameDay, currentDay };
-	},
 });
 </script>
-
-<style lang="scss" scoped>
-.day {
-	display: flex;
-	width: 100%;
-	height: 100%;
-
-	.header {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		width: 100px;
-		height: 100%;
-		padding: 20px 0;
-		font-size: 16px;
-		background-color: var(--background-page);
-
-		&-week {
-			color: var(--foreground-subdued);
-		}
-
-		&-day {
-			margin-top: 12px;
-			font-size: 24px;
-
-			&.today {
-				border-bottom: 3px solid var(--primary);
-			}
-		}
-	}
-}
-</style>

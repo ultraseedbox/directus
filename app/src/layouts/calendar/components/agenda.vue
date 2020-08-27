@@ -15,7 +15,7 @@
 					</div>
 					<div class="event add">
 						<div class="line"><div class="dot"></div></div>
-						<div class="content" @click="newItem">
+						<div class="content" @click="newItem(i)">
 							<v-icon name="add"></v-icon>
 							add new Item
 						</div>
@@ -24,8 +24,8 @@
 			</div>
 		</div>
 		<div v-else class="no-events">
-			<span>There are no events between</span>
-			<span>{{ interval.getStart().toLocaleString() }} and {{ interval.getEnd().toLocaleString() }}</span>
+			<span>There are no events in between</span>
+			<span>{{ interval.getStart().toLocaleDateString() }} and {{ interval.getEnd().toLocaleDateString() }}</span>
 		</div>
 	</div>
 </template>
@@ -111,8 +111,12 @@ export default defineComponent({
 			router.push(item.__link__);
 		}
 
-		function newItem() {
-			router.push(`/collections/${props.collection}/+`);
+		function newItem(index: number) {
+			const dateField = props.viewOptions.isDatetime ? props.viewOptions.datetime : props.viewOptions.date;
+			if (!dateField) return;
+			const date = new Date(dayList.value[index][0][dateField].substr(0, 10));
+
+			router.push(`/collections/${props.collection}/+?${dateField}=${date.toISOString()}`);
 		}
 	},
 });

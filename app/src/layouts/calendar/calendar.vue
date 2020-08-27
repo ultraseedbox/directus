@@ -70,7 +70,8 @@
 					<v-icon name="arrow_forward" @click.native="forwards"></v-icon>
 				</div>
 				<div class="currentDate">
-					{{ $t('months.' + monthNames[currentDate.getMonth()]) }} {{ currentDate.getFullYear() }}
+					<span v-show="viewType != 'year'">{{ $t('months.' + monthNames[currentDate.getMonth()]) }}</span>
+					<v-select v-model="selectedYear" :items="yearOptions" inline></v-select>
 				</div>
 			</div>
 			<div class="header-center"></div>
@@ -93,6 +94,8 @@
 					:viewOptions="viewOptions"
 					:items="itemsWithLink"
 					:collection="collection"
+					@changeView="onChangeView"
+					@wheel.native="throttledScroll($event)"
 				></component>
 			</transition>
 		</div>
@@ -117,6 +120,8 @@ import Day from './components/day.vue';
 import Week from './components/week.vue';
 import Month from './components/month.vue';
 import Agenda from './components/agenda.vue';
+import Year from './components/year.vue';
+import { throttle } from 'lodash';
 
 type Item = Record<string, any>;
 
@@ -132,12 +137,11 @@ export type ViewOptions = {
 
 type ViewQuery = {
 	fields?: string[];
-	sort?: string;
 	limit?: number;
 };
 
 export default defineComponent({
-	components: { Month, Week, Day, Agenda },
+	components: { Month, Week, Day, Agenda, Year },
 	props: {
 		collection: {
 			type: String,
@@ -198,7 +202,21 @@ export default defineComponent({
 		const availableFields = computed(() => fieldsInCollection.value.filter((field) => field.meta.hidden !== true));
 
 		const { isAgenda, isDatetime, date, time, datetime, title, color } = useViewOptions();
-		const { sort, limit, fields } = useViewQuery();
+		const { limit, fields } = useViewQuery();
+
+		const sort = computed(() => {
+			const sortField = isDatetime.value ? datetime.value : date.value;
+			let sortString = '';
+
+			if (datetime.value || date.value) {
+				sortString += '-' + availableFields.value.find((f) => f.field == sortField)?.field;
+
+				if (!isDatetime.value && time.value) {
+					sortString += ',-' + availableFields.value.find((f) => f.field == time.value)?.field;
+				}
+			}
+			return sortString;
+		});
 
 		const isDatetimeTabs = computed({
 			get() {
@@ -229,14 +247,14 @@ export default defineComponent({
 			},
 		});
 		const swipeTo = ref<'left' | 'right' | 'top' | 'bottom'>('left');
-		const _viewType = ref<Interval.Type>(isAgenda ? Interval.Type.AGENDA : Interval.Type.MONTH);
+		const _viewType = ref<Interval.Type>(isAgenda.value ? Interval.Type.AGENDA : Interval.Type.MONTH);
 
 		const viewType = computed({
 			get() {
 				return _viewType.value;
 			},
 			set(newVal: Interval.Type) {
-				const typeToInt = { agenda: 0, month: 1, week: 2, day: 3 };
+				const typeToInt = { year: 0, agenda: 1, month: 2, week: 3, day: 4 };
 
 				swipeTo.value = typeToInt[newVal] < typeToInt[_viewType.value] ? 'top' : 'bottom';
 
@@ -249,6 +267,7 @@ export default defineComponent({
 
 		const viewSelection = computed(() => {
 			return [
+				{ text: i18n.t('layouts.calendar.year'), value: 'year' },
 				{ text: i18n.t('layouts.calendar.agenda'), value: 'agenda' },
 				{ text: i18n.t('layouts.calendar.month'), value: 'month' },
 				{ text: i18n.t('layouts.calendar.week'), value: 'week' },
@@ -269,6 +288,34 @@ export default defineComponent({
 			});
 			return itemList;
 		});
+
+		const selectedYear = computed({
+			get() {
+				return currentDate.value.getFullYear();
+			},
+			set(newVal: number) {
+				const newDate = new Date(currentDate.value.getTime());
+				newDate.setFullYear(newVal);
+				currentDate.value = newDate;
+			},
+		});
+
+		const yearOptions = computed(() => {
+			const currentYear = new Date().getFullYear();
+			const options: { text: string; value: number }[] = [];
+			for (let i = currentYear - 10; i <= currentYear + 10; i++) {
+				options.push({ text: i.toString(), value: i });
+			}
+			return options;
+		});
+
+		function onScroll(event: WheelEvent) {
+			if (viewType.value != Interval.Type.MONTH) return;
+			if (event.deltaY > 0) forwards();
+			else backwards();
+		}
+
+		const throttledScroll = throttle(onScroll, 300);
 
 		return {
 			_selection,
@@ -305,7 +352,16 @@ export default defineComponent({
 			interval,
 			isAgenda,
 			viewSelection,
+			onChangeView,
+			yearOptions,
+			selectedYear,
+			throttledScroll,
 		};
+
+		function onChangeView({ date, type }: { date: Date; type: Interval.Type }) {
+			currentDate.value = date;
+			viewType.value = type;
+		}
 
 		function resetCurrentDate() {
 			const now = new Date();
@@ -318,6 +374,9 @@ export default defineComponent({
 			swipeTo.value = 'right';
 			let [month, day] = [currentDate.value.getMonth(), currentDate.value.getDate()];
 			switch (viewType.value) {
+				case 'year':
+					month += 12;
+					break;
 				case 'agenda':
 					month++;
 					break;
@@ -340,6 +399,9 @@ export default defineComponent({
 			swipeTo.value = 'left';
 			let [month, day] = [currentDate.value.getMonth(), currentDate.value.getDate()];
 			switch (viewType.value) {
+				case 'year':
+					month -= 12;
+					break;
 				case 'agenda':
 					month--;
 					break;
@@ -409,19 +471,11 @@ export default defineComponent({
 		}
 
 		function useViewQuery() {
-			const date = ref(new Date(Date.now()));
-
-			const sortField = isDatetime.value ? datetime.value : date.value;
-			const sort = createViewQueryOption<string>(
-				'sort',
-				'-' + availableFields.value.find((f) => f.field == sortField)?.field
-			);
-
 			const limit = createViewQueryOption<number>('limit', 500);
 
 			const fields = createViewQueryOption<Array<string>>('fields', ['*']);
 
-			return { sort, limit, fields };
+			return { limit, fields };
 
 			function createViewQueryOption<T>(key: keyof ViewQuery, defaultValue: any) {
 				return computed<T>({
@@ -466,8 +520,12 @@ export default defineComponent({
 			}
 
 			.currentDate {
-				width: 150px;
+				display: flex;
 				margin-left: 10px;
+
+				span {
+					margin-right: 10px;
+				}
 			}
 		}
 

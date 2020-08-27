@@ -43,10 +43,9 @@ class Interval {
 		this.type = type;
 
 		switch (type) {
-			case Interval.Type.WEEK:
-				const diff = date.getDate() - day + (day == 0 ? -6 : 1);
-				this.start = new Date(year, month, diff);
-				this.end = new Date(year, month, diff + 7);
+			case Interval.Type.YEAR:
+				this.start = new Date(year, 0, 1);
+				this.end = new Date(year + 1, 0, 1);
 				break;
 			case Interval.Type.MONTH:
 				this.start = new Date(year, month, 1);
@@ -55,6 +54,11 @@ class Interval {
 			case Interval.Type.AGENDA:
 				this.start = new Date(year, month, 1);
 				this.end = new Date(year, month + 1, 1);
+				break;
+			case Interval.Type.WEEK:
+				const diff = date.getDate() - day + (day == 0 ? -6 : 1);
+				this.start = new Date(year, month, diff);
+				this.end = new Date(year, month, diff + 7);
 				break;
 			case Interval.Type.DAY:
 				this.start = new Date(year, month, date.getDate());
@@ -83,12 +87,15 @@ class Interval {
 
 	getLength() {
 		switch (this.type) {
-			case Interval.Type.WEEK:
-				return 7;
+			case Interval.Type.YEAR:
+				if (new Date(this.start.getFullYear(), 2, 0).getDate() == 28) return 365;
+				else return 366;
 			case Interval.Type.MONTH:
 				return new Date(this.end.getFullYear(), this.end.getMonth() + 1, 0).getDate();
 			case Interval.Type.AGENDA:
 				return new Date(this.end.getFullYear(), this.end.getMonth() + 1, 0).getDate();
+			case Interval.Type.WEEK:
+				return 7;
 			case Interval.Type.DAY:
 				return 1;
 		}
@@ -98,6 +105,7 @@ class Interval {
 // eslint-disable-next-line @typescript-eslint/no-namespace
 namespace Interval {
 	export enum Type {
+		YEAR = 'year',
 		MONTH = 'month',
 		WEEK = 'week',
 		DAY = 'day',

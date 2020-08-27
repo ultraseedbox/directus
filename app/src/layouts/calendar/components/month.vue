@@ -5,6 +5,7 @@
 			:key="index"
 			class="months-day"
 			:class="{ hidden: !interval.isInInterval(getDate(index)) }"
+			@click="selectDay(index)"
 		>
 			<div class="header">
 				<div v-if="index < 8" class="header-week">{{ $t('weeks.' + getWeek(index)).substr(0, 3) }}</div>
@@ -47,7 +48,7 @@ export default defineComponent({
 			default: null,
 		},
 	},
-	setup(props) {
+	setup(props, { emit }) {
 		const currentMonth = ref(props.interval);
 
 		const monthBegin = computed(() => {
@@ -60,12 +61,14 @@ export default defineComponent({
 			getWeek,
 			isSameDay,
 			getEvents,
+			selectDay,
 		};
 
 		function getEvents(index: number) {
 			const date = getDate(index);
+			if (!props.viewOptions) return [];
 			const dateField = props.viewOptions.isDatetime ? props.viewOptions.datetime : props.viewOptions.date;
-			if (dateField == undefined) return;
+			if (dateField == undefined) return [];
 			return props.items.filter((i) => isSameDay(new Date(i[dateField]), date));
 		}
 
@@ -75,6 +78,11 @@ export default defineComponent({
 
 		function getWeek(index: number) {
 			return weekNames[index - (1 % 7)];
+		}
+
+		function selectDay(index: number) {
+			const date = getDate(index);
+			emit('changeView', { date, type: Interval.Type.DAY });
 		}
 	},
 });
@@ -95,6 +103,11 @@ export default defineComponent({
 
 		&.hidden {
 			opacity: 0.5;
+		}
+
+		&:hover:not(.hidden) {
+			background-color: var(--background-subdued);
+			cursor: pointer;
 		}
 
 		.header {

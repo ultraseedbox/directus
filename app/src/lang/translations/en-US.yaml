@@ -1116,4 +1116,5 @@ layouts:
     month: Month,
     week: Week,
     day: Day,
-    agenda: Agenda
+    agenda: Agenda,
+    year: Year

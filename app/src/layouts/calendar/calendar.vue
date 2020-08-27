@@ -74,7 +74,8 @@
 					<v-select v-model="selectedYear" :items="yearOptions" inline></v-select>
 				</div>
 				<div class="currentDate">
-					{{ $t('months.' + monthNames[currentDate.getMonth()]) }} {{ currentDate.getFullYear() }}
+					<span v-show="viewType != 'year'">{{ $t('months.' + monthNames[currentDate.getMonth()]) }}</span>
+					<v-select v-model="selectedYear" :items="yearOptions" inline></v-select>
 				</div>
 			</div>
 			<div class="header-center"></div>

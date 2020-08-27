@@ -92,6 +92,10 @@ export default defineComponent({
 			return weekNames[date.getDay() == 0 ? 6 : date.getDay() - 1];
 		}
 
+		function getWeekDay(date: Date) {
+			return weekNames[date.getDay() == 0 ? 6 : date.getDay() - 1];
+		}
+
 		function getDate(index: number) {
 			return currentWeek.value.getDate(index - 1);
 		}

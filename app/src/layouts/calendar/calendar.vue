@@ -124,7 +124,7 @@ import i18n from '@/lang';
 import adjustFieldsForDisplays from '@/utils/adjust-fields-for-displays';
 import useElementSize from '@/composables/use-element-size';
 import { clone } from 'lodash';
-import { monthNames, isSameDay, isSameMonth, isSameWeek, Interval } from './time';
+import { monthNames, isSameDay, isSameMonth, isSameWeek, Interval, nextInterval } from './time';
 import Day from './components/day.vue';
 import Week from './components/week.vue';
 import Month from './components/month.vue';
@@ -257,19 +257,16 @@ export default defineComponent({
 			},
 		});
 		const swipeTo = ref<'left' | 'right' | 'top' | 'bottom'>('left');
-		const _viewType = ref<Interval.Type>(isAgenda.value ? Interval.Type.AGENDA : Interval.Type.MONTH);
 
+		const _viewType = ref<Interval.Type>(isAgenda.value ? Interval.Type.AGENDA : Interval.Type.MONTH);
 		const viewType = computed({
 			get() {
 				return _viewType.value;
 			},
 			set(newVal: Interval.Type) {
 				const typeToInt = { year: 0, agenda: 1, month: 2, week: 3, day: 4 };
-
 				swipeTo.value = typeToInt[newVal] < typeToInt[_viewType.value] ? 'top' : 'bottom';
-
 				isAgenda.value = newVal == 'agenda';
-
 				_viewType.value = newVal;
 				updateFilters();
 			},
@@ -310,6 +307,7 @@ export default defineComponent({
 			},
 		});
 
+		// Creates an Interval (-10 | +10) for the current year.
 		const yearOptions = computed(() => {
 			const currentYear = currentDate.value.getFullYear();
 			const options: { text: string; value: number }[] = [];
@@ -383,52 +381,16 @@ export default defineComponent({
 
 		function forwards() {
 			swipeTo.value = 'right';
-			let [month, day] = [currentDate.value.getMonth(), currentDate.value.getDate()];
-			switch (viewType.value) {
-				case 'year':
-					month += 12;
-					break;
-				case 'agenda':
-					month++;
-					break;
-				case 'month':
-					month++;
-					break;
-				case 'week':
-					day += 7;
-					break;
-				case 'day':
-					day++;
-					break;
-				default:
-					month++;
-			}
-			currentDate.value = new Date(currentDate.value.getFullYear(), month, day);
+			const [currentMonth, currentDay] = [currentDate.value.getMonth(), currentDate.value.getDate()];
+			const { month, day } = nextInterval(viewType.value);
+			currentDate.value = new Date(currentDate.value.getFullYear(), currentMonth + month, currentDay + day);
 		}
 
 		function backwards() {
 			swipeTo.value = 'left';
-			let [month, day] = [currentDate.value.getMonth(), currentDate.value.getDate()];
-			switch (viewType.value) {
-				case 'year':
-					month -= 12;
-					break;
-				case 'agenda':
-					month--;
-					break;
-				case 'month':
-					month--;
-					break;
-				case 'week':
-					day -= 7;
-					break;
-				case 'day':
-					day--;
-					break;
-				default:
-					month--;
-			}
-			currentDate.value = new Date(currentDate.value.getFullYear(), month, day);
+			const [currentMonth, currentDay] = [currentDate.value.getMonth(), currentDate.value.getDate()];
+			const { month, day } = nextInterval(viewType.value);
+			currentDate.value = new Date(currentDate.value.getFullYear(), currentMonth - month, currentDay - day);
 		}
 
 		function getLinkForItem(item: Record<string, any>) {

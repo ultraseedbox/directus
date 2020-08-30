@@ -13,7 +13,7 @@ const monthNames = [
 	'december',
 ];
 const weekNames = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-export { weekNames, monthNames, isSameWeek, isSameMonth, isSameDay, isSameYear, Interval };
+export { weekNames, monthNames, isSameWeek, isSameMonth, isSameDay, isSameYear, Interval, nextInterval };
 
 function isSameYear(day1: Date, day2: Date) {
 	return day1.getFullYear() == day2.getFullYear();
@@ -111,4 +111,15 @@ namespace Interval {
 		DAY = 'day',
 		AGENDA = 'agenda',
 	}
+}
+
+function nextInterval(interval: Interval.Type) {
+	const intervalMap: Record<Interval.Type, { month: number; day: number }> = {
+		year: { month: 12, day: 0 },
+		month: { month: 1, day: 0 },
+		week: { month: 0, day: 7 },
+		day: { month: 0, day: 1 },
+		agenda: { month: 1, day: 0 },
+	};
+	return intervalMap[interval];
 }

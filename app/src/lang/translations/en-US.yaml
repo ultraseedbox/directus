@@ -1117,4 +1117,7 @@ layouts:
     week: Week,
     day: Day,
     agenda: Agenda,
-    year: Year
+    year: Year,
+    animations: Animations,
+    animations-enabled: Enabled,
+    animations-disabled: Disabled

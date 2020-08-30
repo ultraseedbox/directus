@@ -99,6 +99,8 @@ export default defineComponent({
 	.year {
 		display: grid;
 		grid-template: repeat(3, 1fr) / repeat(4, 1fr);
+		width: 100%;
+		min-height: 100%;
 		padding: 0 20px;
 		background-color: var(--background-page);
 
@@ -138,8 +140,8 @@ export default defineComponent({
 						&::before {
 							position: absolute;
 							z-index: -1;
-							width: 100%;
-							padding-top: 100%;
+							width: 25px;
+							height: 25px;
 							background-color: var(--primary);
 							border-radius: 50%;
 							content: '';

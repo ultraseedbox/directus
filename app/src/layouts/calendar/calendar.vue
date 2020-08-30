@@ -2,6 +2,14 @@
 	<div class="calendar">
 		<portal to="layout-options">
 			<div class="layout-option">
+				<div class="option-label">{{ $t('layouts.calendar.animations') }}</div>
+				<v-switch
+					v-model="animations"
+					:label="$t(`layouts.calendar.animations-${animations ? 'enabled' : 'disabled'}`)"
+				></v-switch>
+			</div>
+
+			<div class="layout-option">
 				<v-tabs v-model="isDatetimeTabs">
 					<v-tab style="padding: unset;">Date & Time</v-tab>
 					<v-tab style="padding: unset;">Datetime</v-tab>
@@ -90,6 +98,7 @@
 					:is="viewType"
 					:key="currentDate.toString()"
 					class="view-element"
+					:class="{ animations }"
 					:interval="interval"
 					:viewOptions="viewOptions"
 					:items="itemsWithLink"
@@ -126,9 +135,10 @@ import { throttle } from 'lodash';
 type Item = Record<string, any>;
 
 export type ViewOptions = {
-	isAgenda?: boolean;
+	isAgenda: boolean;
 	isDatetime: boolean;
 	datetime?: string;
+	animations: boolean;
 	date?: string;
 	time?: string;
 	title?: string;
@@ -201,7 +211,7 @@ export default defineComponent({
 
 		const availableFields = computed(() => fieldsInCollection.value.filter((field) => field.meta.hidden !== true));
 
-		const { isAgenda, isDatetime, date, time, datetime, title, color } = useViewOptions();
+		const { isAgenda, isDatetime, animations, date, time, datetime, title, color } = useViewOptions();
 		const { limit, fields } = useViewQuery();
 
 		const sort = computed(() => {
@@ -301,7 +311,7 @@ export default defineComponent({
 		});
 
 		const yearOptions = computed(() => {
-			const currentYear = new Date().getFullYear();
+			const currentYear = currentDate.value.getFullYear();
 			const options: { text: string; value: number }[] = [];
 			for (let i = currentYear - 10; i <= currentYear + 10; i++) {
 				options.push({ text: i.toString(), value: i });
@@ -356,6 +366,7 @@ export default defineComponent({
 			yearOptions,
 			selectedYear,
 			throttledScroll,
+			animations,
 		};
 
 		function onChangeView({ date, type }: { date: Date; type: Interval.Type }) {
@@ -445,6 +456,7 @@ export default defineComponent({
 		}
 
 		function useViewOptions() {
+			const animations = createViewOption<boolean>('animations', true);
 			const isAgenda = createViewOption<boolean>('isAgenda', false);
 			const isDatetime = createViewOption<boolean>('isDatetime', true);
 			const datetime = createViewOption<string>('datetime', null);
@@ -453,7 +465,7 @@ export default defineComponent({
 			const title = createViewOption<string>('title', null);
 			const color = createViewOption<string>('color', null);
 
-			return { datetime, date, time, title, color, isDatetime, isAgenda };
+			return { datetime, date, time, title, color, isDatetime, isAgenda, animations };
 
 			function createViewOption<T>(key: keyof ViewOptions, defaultValue: any) {
 				return computed<T>({
@@ -499,7 +511,7 @@ export default defineComponent({
 .calendar {
 	display: flex;
 	flex-direction: column;
-	height: calc(100% - var(--layout-offset-top) * 2);
+	height: calc(100% - (24px * 2) - 65px);
 	overflow: hidden;
 
 	.header {
@@ -549,8 +561,10 @@ export default defineComponent({
 			position: absolute;
 			top: 0;
 			left: 0;
-			transition: transform 500ms;
 
+			&.animations {
+				transition: transform 500ms;
+			}
 			&.left-enter {
 				transform: translate(-100%);
 			}

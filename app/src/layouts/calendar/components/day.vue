@@ -1,5 +1,5 @@
 <template>
-	<week :interval="interval" :viewOptions="viewOptions" :items="items" :days="1"></week>
+	<week :interval="interval" :view-options="viewOptions" :items="items" :days="1"></week>
 </template>
 
 <script lang="ts">

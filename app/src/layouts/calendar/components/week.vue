@@ -18,7 +18,7 @@
 					v-for="event in getEvents(index)"
 					:key="event.id"
 					:item="event"
-					:viewOptions="viewOptions"
+					:view-options="viewOptions"
 					:absolute="viewOptions.time != null || viewOptions.datetime != null"
 				></event>
 			</div>

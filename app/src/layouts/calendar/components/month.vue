@@ -18,7 +18,7 @@
 					v-for="event in getEvents(index)"
 					:key="event.id"
 					:item="event"
-					:viewOptions="viewOptions"
+					:view-options="viewOptions"
 				></event>
 			</div>
 		</div>

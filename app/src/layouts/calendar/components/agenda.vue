@@ -9,8 +9,8 @@
 							<div class="dot" :style="getDotColor(event)" />
 						</div>
 						<div class="content" @click="onCLick(event)">
-							<span class="time" v-if="event.__time__">{{ event.__time__.substr(0, 5) }}</span>
-							<span class="title">{{ event.title }}</span>
+							<span class="time" v-if="event.time">{{ event.time.substr(0, 5) }}</span>
+							<span class="title">{{ event.data[viewOptions.title] }}</span>
 						</div>
 					</div>
 					<div class="event add">

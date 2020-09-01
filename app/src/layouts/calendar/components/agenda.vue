@@ -2,7 +2,7 @@
 	<div class="agenda-wrapper">
 		<div class="agenda" v-if="Object.keys(dayList).length > 0">
 			<div class="day" v-for="(day, i) in dayList" :key="i">
-				<div class="date">Activity on {{ dateOfIndex[i] }}</div>
+				<div class="date">{{ $t('layouts.calendar.activity-on') }} {{ dateOfIndex[i] }}</div>
 				<div class="events">
 					<div class="event" v-for="(event, j) in day" :key="j">
 						<div class="line">

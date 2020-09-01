@@ -1123,4 +1123,5 @@ layouts:
     animations-disabled: Disabled,
     add-item: add new Item,
     no-events: There are no events in between,
-    and: and
+    and: and,
+    activity-on: Activity on,

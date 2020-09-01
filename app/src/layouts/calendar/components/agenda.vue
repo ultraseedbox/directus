@@ -138,13 +138,15 @@ export default defineComponent({
 		width: 100%;
 	}
 
-	.no-events {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		width: 100%;
-		height: 100%;
+		&.add {
+			.line .dot {
+				background-color: var(--foreground-subdued);
+			}
+
+			.content {
+				color: var(--foreground-subdued);
+			}
+		}
 	}
 }
 

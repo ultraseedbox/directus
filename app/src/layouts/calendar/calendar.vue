@@ -82,7 +82,7 @@
 					<v-select v-model="selectedYear" :items="yearOptions" inline></v-select>
 				</div>
 				<div class="currentDate">
-					<span v-show="viewType != 'year'">{{ $t('months.' + monthNames[currentDate.getMonth()]) }}</span>
+					<span v-show="viewType !== 'year'">{{ $t('months.' + monthNames[currentDate.getMonth()]) }}</span>
 					<v-select v-model="selectedYear" :items="yearOptions" inline></v-select>
 				</div>
 			</div>

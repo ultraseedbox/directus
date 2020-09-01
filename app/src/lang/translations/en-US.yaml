@@ -1120,4 +1120,7 @@ layouts:
     year: Year,
     animations: Animations,
     animations-enabled: Enabled,
-    animations-disabled: Disabled
+    animations-disabled: Disabled,
+    add-item: add new Item,
+    no-events: There are no events in between,
+    and: and

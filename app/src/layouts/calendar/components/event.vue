@@ -1,6 +1,6 @@
 <template>
 	<div class="event" @click="onClick" :style="style" :class="{ absolute }">
-		<span class="title">{{ item[viewOptions.title] }}</span>
+		<span class="title">{{ item.data[viewOptions.title] }}</span>
 		<span v-if="time" class="time">{{ time.substr(0, 5) }}</span>
 	</div>
 </template>
@@ -42,8 +42,8 @@ export default defineComponent({
 		});
 
 		const color = computed<string | undefined>(() => {
-			if (props.viewOptions.color && props.item[props.viewOptions.color]) {
-				return props.item[props.viewOptions.color];
+			if (props.viewOptions.color && props.item.data[props.viewOptions.color]) {
+				return props.item.data[props.viewOptions.color];
 			}
 			return undefined;
 		});
@@ -71,10 +71,10 @@ export default defineComponent({
 
 			if (isDatetime) {
 				if (!datetime) return;
-				timeString = props.item[datetime].split(/(T|\.)/g)[2];
+				timeString = props.item.data[datetime].split(/(T|\.)/g)[2];
 			} else {
 				if (!time) return;
-				timeString = props.item[time];
+				timeString = props.item.data[time];
 			}
 			return timeString;
 		});
@@ -82,7 +82,7 @@ export default defineComponent({
 		return { style, onClick, time };
 
 		function onClick() {
-			router.push(props.item.__link__);
+			if (props.item.link) router.push(props.item.link);
 		}
 	},
 });

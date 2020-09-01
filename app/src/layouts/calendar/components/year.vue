@@ -68,7 +68,7 @@ export default defineComponent({
 		function hasEvents(date: Date) {
 			const dateField = props.viewOptions.isDatetime ? props.viewOptions.datetime : props.viewOptions.date;
 			if (dateField == undefined) return;
-			return props.items.filter((item) => isSameDay(new Date(item[dateField]), date)).length > 0;
+			return props.items.filter((item) => isSameDay(new Date(item.data[dateField]), date)).length > 0;
 		}
 
 		function selectMonth(index: number) {

@@ -11,12 +11,12 @@
 
 			<div class="layout-option">
 				<v-tabs v-model="isDatetimeTabs">
-					<v-tab style="padding: unset;">Date & Time</v-tab>
-					<v-tab style="padding: unset;">Datetime</v-tab>
+					<v-tab style="padding: unset;">{{ $t('layouts.calendar.date-time') }}</v-tab>
+					<v-tab style="padding: unset;">{{ $t('layouts.calendar.datetime') }}</v-tab>
 				</v-tabs>
 			</div>
 
-			<div class="layout-option" v-show="isDatetime">
+			<div class="layout-option" v-if="isDatetime">
 				<div class="option-label">{{ $t('layouts.calendar.datetime') }}</div>
 				<v-select
 					v-model="datetime"
@@ -27,7 +27,7 @@
 				/>
 			</div>
 
-			<div class="layout-option" v-show="!isDatetime">
+			<div class="layout-option" v-if="!isDatetime">
 				<div class="option-label">{{ $t('layouts.calendar.date') }}</div>
 				<v-select
 					v-model="date"
@@ -38,7 +38,7 @@
 				/>
 			</div>
 
-			<div class="layout-option" v-show="!isDatetime">
+			<div class="layout-option" v-if="!isDatetime">
 				<div class="option-label">{{ $t('layouts.calendar.time') }}</div>
 				<v-select
 					v-model="time"
@@ -74,11 +74,11 @@
 		<div class="header">
 			<div class="header-start">
 				<div>
-					<v-icon name="arrow_back" @click.native="backwards"></v-icon>
-					<v-icon name="arrow_forward" @click.native="forwards"></v-icon>
+					<v-icon name="arrow_back" @click="backwards"></v-icon>
+					<v-icon name="arrow_forward" @click="forwards"></v-icon>
 				</div>
 				<div class="currentDate">
-					<span v-show="viewType != 'year'">{{ $t('months.' + monthNames[currentDate.getMonth()]) }}</span>
+					<span v-show="viewType !== 'year'">{{ $t('months.' + monthNames[currentDate.getMonth()]) }}</span>
 					<v-select v-model="selectedYear" :items="yearOptions" inline></v-select>
 				</div>
 			</div>
@@ -100,12 +100,12 @@
 					class="view-element"
 					:class="{ animations }"
 					:interval="interval"
-					:viewOptions="viewOptions"
+					:view-options="viewOptions"
 					:items="itemsWithLink"
 					:collection="collection"
 					@changeView="onChangeView"
 					@wheel.native="throttledScroll($event)"
-				></component>
+				/>
 			</transition>
 		</div>
 	</div>
@@ -246,16 +246,9 @@ export default defineComponent({
 			searchQuery,
 		});
 
-		const _currentDate = ref(new Date());
-		const currentDate = computed({
-			get() {
-				return _currentDate.value;
-			},
-			set(newDate: Date) {
-				_currentDate.value = newDate;
-				updateFilters();
-			},
-		});
+		const currentDate = ref(new Date());
+		watch(currentDate, updateFilters);
+
 		const swipeTo = ref<'left' | 'right' | 'top' | 'bottom'>('left');
 
 		const _viewType = ref<Interval.Type>(isAgenda.value ? Interval.Type.AGENDA : Interval.Type.MONTH);
@@ -287,11 +280,11 @@ export default defineComponent({
 
 		const itemsWithLink = computed(() => {
 			const itemRef: Record<string, any>[] = items.value;
+			const itemList: { data: Record<string, any>; link?: string }[] = [];
 
-			const itemList: Record<string, any>[] = [];
 			itemRef.forEach((item) => {
-				item['__link__'] = getLinkForItem(item);
-				itemList.push(item);
+				if (props.selectMode) itemList.push({ data: item });
+				else itemList.push({ data: item, link: getLinkForItem(item) });
 			});
 			return itemList;
 		});

@@ -69,7 +69,7 @@ export default defineComponent({
 			if (!props.viewOptions) return [];
 			const dateField = props.viewOptions.isDatetime ? props.viewOptions.datetime : props.viewOptions.date;
 			if (dateField == undefined) return [];
-			return props.items.filter((i) => isSameDay(new Date(i[dateField]), date));
+			return props.items.filter((i) => isSameDay(new Date(i.data[dateField]), date));
 		}
 
 		function getDate(index: number) {

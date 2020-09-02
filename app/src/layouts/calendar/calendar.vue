@@ -101,8 +101,10 @@
 					:class="{ animations }"
 					:interval="interval"
 					:view-options="viewOptions"
-					:items="itemsWithLink"
+					:select-mode="selectMode"
+					:items="itemsWithInfo"
 					:collection="collection"
+					v-model="_selection"
 					@changeView="onChangeView"
 					@wheel.native="throttledScroll($event)"
 				/>
@@ -112,19 +114,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, toRefs, inject, computed, ref, watch, onMounted } from '@vue/composition-api';
+import { defineComponent, PropType, toRefs, computed, ref, watch, onMounted } from '@vue/composition-api';
 import { Filter } from '@/types';
 import useSync from '@/composables/use-sync/';
 import useCollection from '@/composables/use-collection/';
 import useItems from '@/composables/use-items';
-import getFieldsFromTemplate from '@/utils/get-fields-from-template';
-import { useRelationsStore } from '@/stores/';
 
 import i18n from '@/lang';
-import adjustFieldsForDisplays from '@/utils/adjust-fields-for-displays';
-import useElementSize from '@/composables/use-element-size';
-import { clone } from 'lodash';
-import { monthNames, isSameDay, isSameMonth, isSameWeek, Interval, nextInterval } from './time';
+import { monthNames, isSameDay, isSameMonth, Interval, nextInterval } from './time';
 import Day from './components/day.vue';
 import Week from './components/week.vue';
 import Month from './components/month.vue';
@@ -195,16 +192,10 @@ export default defineComponent({
 			updateFilters();
 		});
 
-		const relationsStore = useRelationsStore();
-
-		const layoutElement = ref<HTMLElement | null>(null);
-		const mainElement = inject('main-element', ref<Element | null>(null));
-
 		const _selection = useSync(props, 'selection', emit);
 		const _viewOptions = useSync(props, 'viewOptions', emit);
 		const _viewQuery = useSync(props, 'viewQuery', emit);
 		const _filters = useSync(props, 'filters', emit);
-		const _searchQuery = useSync(props, 'searchQuery', emit);
 
 		const { collection, searchQuery } = toRefs(props);
 		const { info, primaryKeyField, fields: fieldsInCollection } = useCollection(collection);
@@ -237,7 +228,7 @@ export default defineComponent({
 			},
 		});
 
-		const { items, loading, error, totalPages, itemCount, getItems } = useItems(collection, {
+		const { items, loading, error, totalPages, itemCount } = useItems(collection, {
 			sort,
 			limit,
 			page: ref(0),
@@ -278,13 +269,17 @@ export default defineComponent({
 		const interval = computed(() => new Interval(currentDate.value, viewType.value));
 		const dateField = computed(() => (isDatetime.value ? datetime.value : date.value));
 
-		const itemsWithLink = computed(() => {
+		const itemsWithInfo = computed(() => {
 			const itemRef: Record<string, any>[] = items.value;
-			const itemList: { data: Record<string, any>; link?: string }[] = [];
+			const itemList: { data: Record<string, any>; link: string; primaryKeyField: string }[] = [];
 
 			itemRef.forEach((item) => {
-				if (props.selectMode) itemList.push({ data: item });
-				else itemList.push({ data: item, link: getLinkForItem(item) });
+				const itemWithInfo = {
+					data: item,
+					link: getLinkForItem(item),
+					primaryKeyField: primaryKeyField.value.field,
+				};
+				itemList.push(itemWithInfo);
 			});
 			return itemList;
 		});
@@ -320,7 +315,7 @@ export default defineComponent({
 
 		return {
 			_selection,
-			itemsWithLink,
+			itemsWithInfo,
 			loading,
 			error,
 			totalPages,
@@ -338,7 +333,6 @@ export default defineComponent({
 			fieldsInCollection,
 			_filters,
 			info,
-			layoutElement,
 			isDatetimeTabs,
 			isDatetime,
 			swipeTo,
@@ -387,7 +381,7 @@ export default defineComponent({
 		}
 
 		function getLinkForItem(item: Record<string, any>) {
-			return `/collections/${props.collection}/${item[primaryKeyField.value!.field]}`;
+			return `/collections/${props.collection}/${item[primaryKeyField.value.field]}`;
 		}
 
 		function updateFilters() {

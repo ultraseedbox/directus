@@ -1,16 +1,22 @@
 <template>
-	<div class="event" @click="onClick" :style="style" :class="{ absolute }">
+	<div
+		class="event"
+		@click="onClick"
+		:style="style"
+		:class="{ absolute, 'no-style': noStyle, selected: value.length > 0 }"
+	>
 		<span class="title">{{ item.data[viewOptions.title] }}</span>
 		<span v-if="time" class="time">{{ time.substr(0, 5) }}</span>
+		<div class="selection">
+			<v-icon :name="selectionIcon" @click.stop="toggleSelection" :small="!noStyle" />
+		</div>
 	</div>
 </template>
 
 <script lang="ts">
 import { defineComponent, PropType, computed, toRefs } from '@vue/composition-api';
-import { weekNames, isSameDay, Interval } from '../time';
 import router from '@/router';
 import { ViewOptions } from '../calendar.vue';
-import { boolean } from '@storybook/addon-knobs';
 
 export default defineComponent({
 	props: {
@@ -26,9 +32,20 @@ export default defineComponent({
 			type: Boolean,
 			default: false,
 		},
+		noStyle: {
+			type: Boolean,
+			default: false,
+		},
+		selectMode: {
+			type: Boolean,
+			default: false,
+		},
+		value: {
+			type: Array as PropType<(string | number)[]>,
+			default: () => [],
+		},
 	},
-	setup(props) {
-		const { viewOptions, item, absolute } = toRefs(props);
+	setup(props, { emit }) {
 		const absolueTop = computed(() => {
 			if (!props.absolute || !time.value) return 0;
 
@@ -39,6 +56,14 @@ export default defineComponent({
 
 			const percent = (hours * 60 + minutes) / (24 * 60);
 			return percent * 100;
+		});
+
+		const selectionIcon = computed(() => {
+			if (!props.item) return 'radio_button_unchecked';
+
+			return props.value.includes(props.item.data[props.item.primaryKeyField])
+				? 'check_circle'
+				: 'radio_button_unchecked';
 		});
 
 		const color = computed<string | undefined>(() => {
@@ -63,9 +88,9 @@ export default defineComponent({
 		});
 
 		const time = computed(() => {
-			const isDatetime = viewOptions.value.isDatetime;
-			const datetime = viewOptions.value.datetime;
-			const time = viewOptions.value.time;
+			const isDatetime = props.viewOptions.isDatetime;
+			const datetime = props.viewOptions.datetime;
+			const time = props.viewOptions.time;
 
 			let timeString = '00:00:00';
 
@@ -79,10 +104,27 @@ export default defineComponent({
 			return timeString;
 		});
 
-		return { style, onClick, time };
+		return { style, onClick, time, selectionIcon, toggleSelection };
+
+		function toggleSelection() {
+			if (!props.item) return null;
+
+			if (props.value.includes(props.item.data[props.item.primaryKeyField])) {
+				emit(
+					'input',
+					props.value.filter((key) => key !== props.item.data[props.item.primaryKeyField])
+				);
+			} else {
+				emit('input', [...props.value, props.item.data[props.item.primaryKeyField]]);
+			}
+		}
 
 		function onClick() {
-			if (props.item.link) router.push(props.item.link);
+			if (props.selectMode) {
+				toggleSelection();
+			} else {
+				router.push(props.item.link);
+			}
 		}
 	},
 });
@@ -90,33 +132,67 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 .event {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	width: 90%;
-	height: 20px;
-	margin: 0 5% 2px;
-	padding: 2px 6px;
-	color: var(--foreground-inverted);
-	font-size: 12px;
-	line-height: 14px;
-	background-color: var(--primary);
-	border-radius: var(--border-radius);
-	cursor: pointer;
+	position: relative;
 
-	&.absolute {
+	.selection {
 		position: absolute;
+		top: 0;
 		left: 0;
+		display: none;
+		align-items: center;
+		height: 100%;
+		padding-right: 40px;
+		padding-left: 10px;
+		background: linear-gradient(to right, rgba(38, 50, 56, 0.6), rgba(38, 50, 56, 0));
 
-		&:hover {
-			z-index: 1;
+		.v-icon {
+			color: var(--background-page);
 		}
 	}
 
-	.title {
-		overflow: hidden;
-		white-space: nowrap;
-		text-overflow: ellipsis;
+	&:not(.no-style) {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		width: 90%;
+		height: 20px;
+		margin: 0 5% 2px;
+		padding: 2px 6px;
+		color: var(--foreground-inverted);
+		font-size: 12px;
+		line-height: 14px;
+		background-color: var(--primary);
+		border-radius: var(--border-radius);
+		cursor: pointer;
+
+		&.absolute {
+			position: absolute;
+			left: 0;
+
+			&:hover {
+				z-index: 1;
+			}
+		}
+
+		.title {
+			overflow: hidden;
+			white-space: nowrap;
+			text-overflow: ellipsis;
+		}
+
+		.selection {
+			padding-left: 5px;
+			border-radius: var(--border-radius);
+		}
+	}
+
+	&.no-style .selection {
+		padding-right: 60px;
+	}
+
+	&:hover .selection,
+	&.selected .selection {
+		display: flex;
 	}
 }
 </style>

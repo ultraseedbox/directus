@@ -24,7 +24,7 @@
 
 <script lang="ts">
 import { defineComponent, PropType, computed } from '@vue/composition-api';
-import { weekNames, isSameMonth, Interval, monthNames, isSameDay } from '../time';
+import { weekNames, Interval, monthNames, isSameDay } from '../time';
 import { ViewOptions } from '../calendar.vue';
 import Event from './event.vue';
 

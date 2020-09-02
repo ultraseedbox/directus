@@ -4,20 +4,24 @@
 			<div class="day" v-for="(day, i) in dayList" :key="i">
 				<div class="date">{{ $t('layouts.calendar.activity-on') }} {{ dateOfIndex[i] }}</div>
 				<div class="events">
-					<div class="event" v-for="(event, j) in day" :key="j">
+					<div class="event-container" v-for="(event, j) in day" :key="j">
 						<div class="line">
 							<div class="dot" :style="getDotColor(event)" />
 						</div>
-						<div class="content" @click="onCLick(event)">
-							<span class="time" v-if="event.time">{{ event.time.substr(0, 5) }}</span>
-							<span class="title">{{ event.data[viewOptions.title] }}</span>
-						</div>
+						<event
+							:item="event"
+							:value="value"
+							@input="$emit('input', $event)"
+							:view-options="viewOptions"
+							:select-mode="selectMode"
+							no-style
+						/>
 					</div>
-					<div class="event add">
+					<div class="event-container add">
 						<div class="line"><div class="dot" /></div>
-						<div class="content" @click="newItem(i)">
-							<v-icon name="add"></v-icon>
+						<div class="event" @click="newItem(i)">
 							{{ $t('layouts.calendar.add-item') }}
+							<v-icon name="add"></v-icon>
 						</div>
 					</div>
 				</div>
@@ -38,10 +42,10 @@ import { defineComponent, PropType, computed } from '@vue/composition-api';
 import { weekNames, isSameDay, Interval } from '../time';
 import { ViewOptions } from '../calendar.vue';
 import router from '@/router';
-import color from '@/utils/color';
+import Event from './event.vue';
 
 export default defineComponent({
-	components: {},
+	components: { Event },
 	props: {
 		interval: {
 			type: Interval,
@@ -59,6 +63,14 @@ export default defineComponent({
 			type: String,
 			default: null,
 		},
+		selectMode: {
+			type: Boolean,
+			default: false,
+		},
+		value: {
+			type: Array as PropType<(string | number)[]>,
+			default: () => [],
+		},
 	},
 	setup(props) {
 		const days = computed(() => {
@@ -67,21 +79,12 @@ export default defineComponent({
 			props.items.forEach((item) => {
 				const options = props.viewOptions;
 				let day = '0000-00-00';
-				let time: string | undefined;
 
 				if (options.isDatetime && options.datetime) {
 					const date = new Date(item.data[options.datetime]);
 					day = date.toLocaleDateString();
-					time = date.toLocaleTimeString();
 				} else if (!options.isDatetime && options.date) {
 					day = new Date(item.data[options.date]).toLocaleDateString();
-					if (options.time) {
-						time = new Date(item.data[options.time]).toLocaleTimeString();
-					}
-				}
-
-				if (time) {
-					item.time = time;
 				}
 
 				if (Object.keys(days).includes(day)) {
@@ -101,17 +104,13 @@ export default defineComponent({
 			return Object.keys(days.value).reverse();
 		});
 
-		return { weekNames, isSameDay, dayList, dateOfIndex, onCLick, days, newItem, getDotColor };
+		return { weekNames, isSameDay, dayList, dateOfIndex, days, newItem, getDotColor };
 
 		function getDotColor(item: Record<string, any>) {
 			if (props.viewOptions.color && item.data[props.viewOptions.color]) {
 				return { 'background-color': item.data[props.viewOptions.color] };
 			}
 			return {};
-		}
-
-		function onCLick(item: Record<string, any>) {
-			if (item.link) router.push(item.link);
 		}
 
 		function newItem(index: number) {
@@ -167,7 +166,7 @@ export default defineComponent({
 .events {
 	padding: 15px 0;
 
-	.event {
+	.event-container {
 		position: relative;
 
 		.line {
@@ -194,7 +193,10 @@ export default defineComponent({
 			}
 		}
 
-		.content {
+		::v-deep .event {
+			display: flex;
+			flex-direction: row-reverse;
+			justify-content: flex-end;
 			margin: 0 32px 0 52px;
 			padding: 12px;
 			border-bottom: 2px solid var(--background-normal-alt);
@@ -215,7 +217,7 @@ export default defineComponent({
 				background-color: transparent;
 			}
 
-			.content {
+			.event-container {
 				border-bottom: none;
 			}
 		}
@@ -225,7 +227,7 @@ export default defineComponent({
 				background-color: var(--foreground-subdued);
 			}
 
-			.content {
+			.event-container {
 				color: var(--foreground-subdued);
 			}
 		}

@@ -18,6 +18,9 @@
 					v-for="event in getEvents(index)"
 					:key="event.id"
 					:item="event"
+					:value="value"
+					@input="$emit('input', $event)"
+					:select-mode="selectMode"
 					:view-options="viewOptions"
 				></event>
 			</div>
@@ -30,7 +33,6 @@ import { defineComponent, PropType, computed, ref } from '@vue/composition-api';
 import { weekNames, isSameDay, Interval } from '../time';
 import { ViewOptions } from '../calendar.vue';
 import Event from './event.vue';
-import { isSaturday } from 'date-fns';
 
 export default defineComponent({
 	components: { Event },
@@ -46,6 +48,14 @@ export default defineComponent({
 		items: {
 			type: Array as PropType<Record<string, any>[]>,
 			default: null,
+		},
+		selectMode: {
+			type: Boolean,
+			default: false,
+		},
+		value: {
+			type: Array as PropType<(string | number)[]>,
+			default: () => [],
 		},
 	},
 	setup(props, { emit }) {

@@ -1,5 +1,13 @@
 <template>
-	<week :interval="interval" :view-options="viewOptions" :items="items" :days="1"></week>
+	<week
+		:interval="interval"
+		:view-options="viewOptions"
+		:items="items"
+		:days="1"
+		:select-mode="selectMode"
+		:value="value"
+		@input="$emit('input', $event)"
+	/>
 </template>
 
 <script lang="ts">
@@ -22,6 +30,14 @@ export default defineComponent({
 		items: {
 			type: Array as PropType<Record<string, any>[]>,
 			default: null,
+		},
+		selectMode: {
+			type: Boolean,
+			default: false,
+		},
+		value: {
+			type: Array as PropType<(string | number)[]>,
+			default: () => [],
 		},
 	},
 });

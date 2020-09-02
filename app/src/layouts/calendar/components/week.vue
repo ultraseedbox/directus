@@ -17,8 +17,11 @@
 				<event
 					v-for="event in getEvents(index)"
 					:key="event.id"
+					:value="value"
+					@input="$emit('input', $event)"
 					:item="event"
 					:view-options="viewOptions"
+					:select-mode="selectMode"
 					:absolute="viewOptions.time != null || viewOptions.datetime != null"
 				></event>
 			</div>
@@ -50,6 +53,14 @@ export default defineComponent({
 		days: {
 			type: Number,
 			default: 7,
+		},
+		selectMode: {
+			type: Boolean,
+			default: false,
+		},
+		value: {
+			type: Array as PropType<(string | number)[]>,
+			default: () => [],
 		},
 	},
 	setup(props, { emit }) {

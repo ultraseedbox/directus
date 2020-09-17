@@ -5,7 +5,7 @@
 		:style="style"
 		:class="{ absolute, 'no-style': noStyle, selected: value.length > 0 }"
 	>
-		<span class="title">{{ item.data[viewOptions.title] }}</span>
+		<span class="title">{{ item.data[layoutOptions.title] }}</span>
 		<span v-if="time" class="time">{{ time.substr(0, 5) }}</span>
 		<div class="selection">
 			<v-icon :name="selectionIcon" @click.stop="toggleSelection" :small="!noStyle" />
@@ -16,12 +16,12 @@
 <script lang="ts">
 import { defineComponent, PropType, computed, toRefs } from '@vue/composition-api';
 import router from '@/router';
-import { ViewOptions } from '../calendar.vue';
+import { LayoutOptions } from '../calendar.vue';
 
 export default defineComponent({
 	props: {
-		viewOptions: {
-			type: Object as PropType<ViewOptions>,
+		layoutOptions: {
+			type: Object as PropType<LayoutOptions>,
 			required: true,
 		},
 		item: {
@@ -67,8 +67,8 @@ export default defineComponent({
 		});
 
 		const color = computed<string | undefined>(() => {
-			if (props.viewOptions.color && props.item.data[props.viewOptions.color]) {
-				return props.item.data[props.viewOptions.color];
+			if (props.layoutOptions.color && props.item.data[props.layoutOptions.color]) {
+				return props.item.data[props.layoutOptions.color];
 			}
 			return undefined;
 		});
@@ -88,9 +88,9 @@ export default defineComponent({
 		});
 
 		const time = computed(() => {
-			const isDatetime = props.viewOptions.isDatetime;
-			const datetime = props.viewOptions.datetime;
-			const time = props.viewOptions.time;
+			const isDatetime = props.layoutOptions.isDatetime;
+			const datetime = props.layoutOptions.datetime;
+			const time = props.layoutOptions.time;
 
 			let timeString = '00:00:00';
 

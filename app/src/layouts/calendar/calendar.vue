@@ -1,11 +1,10 @@
 <template>
 	<div class="calendar">
 		<portal to="layout-options">
-
 			<div class="layout-option">
 				<v-tabs v-model="isDatetimeTabs">
-					<v-tab style="padding: unset;">{{ $t('layouts.calendar.date-time') }}</v-tab>
-					<v-tab style="padding: unset;">{{ $t('layouts.calendar.datetime') }}</v-tab>
+					<v-tab style="padding: unset">{{ $t('layouts.calendar.date-time') }}</v-tab>
+					<v-tab style="padding: unset">{{ $t('layouts.calendar.datetime') }}</v-tab>
 				</v-tabs>
 			</div>
 
@@ -71,7 +70,7 @@
 					<v-icon name="arrow_forward" @click="forwards"></v-icon>
 				</div>
 				<div class="currentDate">
-					<span v-show="viewType !== 'year'">{{ $t('months.' + monthNames[currentDate.getMonth()]) }}</span>
+					<span v-show="layout !== 'year'">{{ $t('months.' + monthNames[currentDate.getMonth()]) }}</span>
 					<v-select v-model="selectedYear" :items="yearOptions" inline></v-select>
 				</div>
 				<div class="currentDate">
@@ -85,18 +84,18 @@
 					{{ $t('layouts.calendar.today').toUpperCase() }}
 				</v-button>
 				<v-button class="dropdown" small>
-					<v-select v-model="viewType" :items="viewSelection" inline></v-select>
+					<v-select v-model="layout" :items="viewSelection" inline></v-select>
 				</v-button>
 			</div>
 		</div>
 		<div class="view">
 			<transition :name="swipeTo">
 				<component
-					:is="viewType"
+					:is="layout"
 					:key="currentDate.toString()"
 					class="view-element"
 					:interval="interval"
-					:view-options="viewOptions"
+					:layout-options="layoutOptions"
 					:select-mode="selectMode"
 					:items="itemsWithInfo"
 					:collection="collection"
@@ -127,7 +126,7 @@ import { throttle } from 'lodash';
 
 type Item = Record<string, any>;
 
-export type ViewOptions = {
+export type LayoutOptions = {
 	isAgenda: boolean;
 	isDatetime: boolean;
 	datetime?: string;
@@ -137,7 +136,7 @@ export type ViewOptions = {
 	color?: string;
 };
 
-type ViewQuery = {
+type LayoutQuery = {
 	fields?: string[];
 	limit?: number;
 };
@@ -153,12 +152,12 @@ export default defineComponent({
 			type: Array as PropType<Item[]>,
 			default: undefined,
 		},
-		viewOptions: {
-			type: Object as PropType<ViewOptions>,
+		layoutOptions: {
+			type: Object as PropType<LayoutOptions>,
 			default: null,
 		},
-		viewQuery: {
-			type: Object as PropType<ViewQuery>,
+		layoutQuery: {
+			type: Object as PropType<LayoutQuery>,
 			default: null,
 		},
 		filters: {
@@ -188,8 +187,8 @@ export default defineComponent({
 		});
 
 		const _selection = useSync(props, 'selection', emit);
-		const _viewOptions = useSync(props, 'viewOptions', emit);
-		const _viewQuery = useSync(props, 'viewQuery', emit);
+		const _layoutOptions = useSync(props, 'layoutOptions', emit);
+		const _layoutQuery = useSync(props, 'layoutQuery', emit);
 		const _filters = useSync(props, 'filters', emit);
 
 		const { collection, searchQuery } = toRefs(props);
@@ -197,8 +196,8 @@ export default defineComponent({
 
 		const availableFields = computed(() => fieldsInCollection.value.filter((field) => field.meta.hidden !== true));
 
-		const { isAgenda, isDatetime, date, time, datetime, title, color } = useViewOptions();
-		const { limit, fields } = useViewQuery();
+		const { isAgenda, isDatetime, date, time, datetime, title, color } = useLayoutOptions();
+		const { limit, fields } = useLayoutQuery();
 
 		const sort = computed(() => {
 			const sortField = isDatetime.value ? datetime.value : date.value;
@@ -237,16 +236,16 @@ export default defineComponent({
 
 		const swipeTo = ref<'left' | 'right' | 'top' | 'bottom'>('left');
 
-		const _viewType = ref<Interval.Type>(isAgenda.value ? Interval.Type.AGENDA : Interval.Type.MONTH);
-		const viewType = computed({
+		const _layout = ref<Interval.Type>(isAgenda.value ? Interval.Type.AGENDA : Interval.Type.MONTH);
+		const layout = computed({
 			get() {
-				return _viewType.value;
+				return _layout.value;
 			},
 			set(newVal: Interval.Type) {
 				const typeToInt = { year: 0, agenda: 1, month: 2, week: 3, day: 4 };
-				swipeTo.value = typeToInt[newVal] < typeToInt[_viewType.value] ? 'top' : 'bottom';
+				swipeTo.value = typeToInt[newVal] < typeToInt[_layout.value] ? 'top' : 'bottom';
 				isAgenda.value = newVal == 'agenda';
-				_viewType.value = newVal;
+				_layout.value = newVal;
 				updateFilters();
 			},
 		});
@@ -261,7 +260,7 @@ export default defineComponent({
 			];
 		});
 
-		const interval = computed(() => new Interval(currentDate.value, viewType.value));
+		const interval = computed(() => new Interval(currentDate.value, layout.value));
 		const dateField = computed(() => (isDatetime.value ? datetime.value : date.value));
 
 		const itemsWithInfo = computed(() => {
@@ -301,7 +300,7 @@ export default defineComponent({
 		});
 
 		function onScroll(event: WheelEvent) {
-			if (viewType.value != Interval.Type.MONTH) return;
+			if (layout.value != Interval.Type.MONTH) return;
 			if (event.deltaY > 0) forwards();
 			else backwards();
 		}
@@ -331,7 +330,7 @@ export default defineComponent({
 			isDatetimeTabs,
 			isDatetime,
 			swipeTo,
-			viewType,
+			layout,
 			currentDate,
 			monthNames,
 			forwards,
@@ -350,7 +349,7 @@ export default defineComponent({
 
 		function onChangeView({ date, type }: { date: Date; type: Interval.Type }) {
 			currentDate.value = date;
-			viewType.value = type;
+			layout.value = type;
 		}
 
 		function resetCurrentDate() {
@@ -363,14 +362,14 @@ export default defineComponent({
 		function forwards() {
 			swipeTo.value = 'right';
 			const [currentMonth, currentDay] = [currentDate.value.getMonth(), currentDate.value.getDate()];
-			const { month, day } = nextInterval(viewType.value);
+			const { month, day } = nextInterval(layout.value);
 			currentDate.value = new Date(currentDate.value.getFullYear(), currentMonth + month, currentDay + day);
 		}
 
 		function backwards() {
 			swipeTo.value = 'left';
 			const [currentMonth, currentDay] = [currentDate.value.getMonth(), currentDate.value.getDate()];
-			const { month, day } = nextInterval(viewType.value);
+			const { month, day } = nextInterval(layout.value);
 			currentDate.value = new Date(currentDate.value.getFullYear(), currentMonth - month, currentDay - day);
 		}
 
@@ -418,7 +417,7 @@ export default defineComponent({
 			return availableFields.value.filter((field) => types.includes(field.type));
 		}
 
-		function useViewOptions() {
+		function useLayoutOptions() {
 			const isAgenda = createViewOption<boolean>('isAgenda', false);
 			const isDatetime = createViewOption<boolean>('isDatetime', true);
 			const datetime = createViewOption<string>('datetime', null);
@@ -429,14 +428,14 @@ export default defineComponent({
 
 			return { datetime, date, time, title, color, isDatetime, isAgenda };
 
-			function createViewOption<T>(key: keyof ViewOptions, defaultValue: any) {
+			function createViewOption<T>(key: keyof LayoutOptions, defaultValue: any) {
 				return computed<T>({
 					get() {
-						return _viewOptions.value?.[key] !== undefined ? _viewOptions.value?.[key] : defaultValue;
+						return _layoutOptions.value?.[key] !== undefined ? _layoutOptions.value?.[key] : defaultValue;
 					},
 					set(newValue: T) {
-						_viewOptions.value = {
-							..._viewOptions.value,
+						_layoutOptions.value = {
+							..._layoutOptions.value,
 							[key]: newValue,
 						};
 					},
@@ -444,21 +443,21 @@ export default defineComponent({
 			}
 		}
 
-		function useViewQuery() {
-			const limit = createViewQueryOption<number>('limit', 500);
+		function useLayoutQuery() {
+			const limit = createLayoutQueryOption<number>('limit', 500);
 
-			const fields = createViewQueryOption<Array<string>>('fields', ['*']);
+			const fields = createLayoutQueryOption<Array<string>>('fields', ['*']);
 
 			return { limit, fields };
 
-			function createViewQueryOption<T>(key: keyof ViewQuery, defaultValue: any) {
+			function createLayoutQueryOption<T>(key: keyof LayoutQuery, defaultValue: any) {
 				return computed<T>({
 					get() {
-						return _viewQuery.value?.[key] || defaultValue;
+						return _layoutQuery.value?.[key] || defaultValue;
 					},
 					set(newValue: T) {
-						_viewQuery.value = {
-							..._viewQuery.value,
+						_layoutQuery.value = {
+							..._layoutQuery.value,
 							[key]: newValue,
 						};
 					},

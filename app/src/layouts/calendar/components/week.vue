@@ -20,9 +20,9 @@
 					:value="value"
 					@input="$emit('input', $event)"
 					:item="event"
-					:view-options="viewOptions"
+					:layout-options="layoutOptions"
 					:select-mode="selectMode"
-					:absolute="viewOptions.time != null || viewOptions.datetime != null"
+					:absolute="(layoutOptions && layoutOptions.time != null) || layoutOptions.datetime != null"
 				></event>
 			</div>
 		</div>
@@ -32,7 +32,7 @@
 <script lang="ts">
 import { defineComponent, PropType, computed, ref } from '@vue/composition-api';
 import { Interval, weekNames, isSameDay } from '../time';
-import { ViewOptions } from '../calendar.vue';
+import { LayoutOptions } from '../calendar.vue';
 import Event from './event.vue';
 
 export default defineComponent({
@@ -42,9 +42,9 @@ export default defineComponent({
 			type: Interval,
 			required: true,
 		},
-		viewOptions: {
-			type: Object as PropType<ViewOptions>,
-			required: true,
+		layoutOptions: {
+			type: Object as PropType<LayoutOptions>,
+			default: null,
 		},
 		items: {
 			type: Array as PropType<Record<string, any>[]>,
@@ -68,7 +68,9 @@ export default defineComponent({
 
 		const currentWeek = ref(props.interval);
 
-		const hasTimeline = computed(() => props.viewOptions.isDatetime || props.viewOptions.time != null);
+		const hasTimeline = computed(
+			() => props.layoutOptions && (props.layoutOptions.isDatetime || props.layoutOptions.time != null)
+		);
 
 		return {
 			weekNames,
@@ -83,7 +85,8 @@ export default defineComponent({
 
 		function getEvents(index: number) {
 			const date = getDate(index);
-			const dateField = props.viewOptions.isDatetime ? props.viewOptions.datetime : props.viewOptions.date;
+			if (!props.layoutOptions) return;
+			const dateField = props.layoutOptions.isDatetime ? props.layoutOptions.datetime : props.layoutOptions.date;
 			if (dateField == undefined) return;
 			return props.items.filter((i) => isSameDay(new Date(i.data[dateField]), date));
 		}

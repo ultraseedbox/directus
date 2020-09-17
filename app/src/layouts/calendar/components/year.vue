@@ -25,7 +25,7 @@
 <script lang="ts">
 import { defineComponent, PropType, computed } from '@vue/composition-api';
 import { weekNames, Interval, monthNames, isSameDay } from '../time';
-import { ViewOptions } from '../calendar.vue';
+import { LayoutOptions } from '../calendar.vue';
 import Event from './event.vue';
 
 export default defineComponent({
@@ -35,8 +35,8 @@ export default defineComponent({
 			type: Interval,
 			required: true,
 		},
-		viewOptions: {
-			type: Object as PropType<ViewOptions>,
+		layoutOptions: {
+			type: Object as PropType<LayoutOptions>,
 			required: true,
 		},
 		items: {
@@ -66,7 +66,7 @@ export default defineComponent({
 		return { weekNames, currentDay, monthNames, hasEvents, selectMonth, months, monthBegin, getDate, isSameDay };
 
 		function hasEvents(date: Date) {
-			const dateField = props.viewOptions.isDatetime ? props.viewOptions.datetime : props.viewOptions.date;
+			const dateField = props.layoutOptions.isDatetime ? props.layoutOptions.datetime : props.layoutOptions.date;
 			if (dateField == undefined) return;
 			return props.items.filter((item) => isSameDay(new Date(item.data[dateField]), date)).length > 0;
 		}

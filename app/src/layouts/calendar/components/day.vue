@@ -1,7 +1,7 @@
 <template>
 	<week
 		:interval="interval"
-		:view-options="viewOptions"
+		:view-options="layoutOptions"
 		:items="items"
 		:days="1"
 		:select-mode="selectMode"
@@ -13,7 +13,7 @@
 <script lang="ts">
 import { defineComponent, PropType } from '@vue/composition-api';
 import { Interval } from '../time';
-import { ViewOptions } from '../calendar.vue';
+import { LayoutOptions } from '../calendar.vue';
 import Week from './week.vue';
 
 export default defineComponent({
@@ -23,8 +23,8 @@ export default defineComponent({
 			type: Interval,
 			required: true,
 		},
-		viewOptions: {
-			type: Object as PropType<ViewOptions>,
+		layoutOptions: {
+			type: Object as PropType<LayoutOptions>,
 			required: true,
 		},
 		items: {

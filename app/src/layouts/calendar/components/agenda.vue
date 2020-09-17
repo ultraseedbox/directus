@@ -12,7 +12,7 @@
 							:item="event"
 							:value="value"
 							@input="$emit('input', $event)"
-							:view-options="viewOptions"
+							:layout-options="layoutOptions"
 							:select-mode="selectMode"
 							no-style
 						/>
@@ -40,7 +40,7 @@
 <script lang="ts">
 import { defineComponent, PropType, computed } from '@vue/composition-api';
 import { weekNames, isSameDay, Interval } from '../time';
-import { ViewOptions } from '../calendar.vue';
+import { LayoutOptions } from '../calendar.vue';
 import router from '@/router';
 import Event from './event.vue';
 
@@ -51,8 +51,8 @@ export default defineComponent({
 			type: Interval,
 			required: true,
 		},
-		viewOptions: {
-			type: Object as PropType<ViewOptions>,
+		layoutOptions: {
+			type: Object as PropType<LayoutOptions>,
 			required: true,
 		},
 		items: {
@@ -77,7 +77,7 @@ export default defineComponent({
 			const days: Record<string, Record<string, any>[]> = {};
 
 			props.items.forEach((item) => {
-				const options = props.viewOptions;
+				const options = props.layoutOptions;
 				let day = '0000-00-00';
 
 				if (options.isDatetime && options.datetime) {
@@ -107,14 +107,14 @@ export default defineComponent({
 		return { weekNames, isSameDay, dayList, dateOfIndex, days, newItem, getDotColor };
 
 		function getDotColor(item: Record<string, any>) {
-			if (props.viewOptions.color && item.data[props.viewOptions.color]) {
-				return { 'background-color': item.data[props.viewOptions.color] };
+			if (props.layoutOptions.color && item.data[props.layoutOptions.color]) {
+				return { 'background-color': item.data[props.layoutOptions.color] };
 			}
 			return {};
 		}
 
 		function newItem(index: number) {
-			const dateField = props.viewOptions.isDatetime ? props.viewOptions.datetime : props.viewOptions.date;
+			const dateField = props.layoutOptions.isDatetime ? props.layoutOptions.datetime : props.layoutOptions.date;
 			if (!dateField) return;
 			const date = new Date(dayList.value[index][0][dateField].substr(0, 10));
 

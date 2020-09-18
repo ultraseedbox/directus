@@ -1,7 +1,7 @@
 <template>
 	<week
 		:interval="interval"
-		:view-options="layoutOptions"
+		:layout-options="layoutOptions"
 		:items="items"
 		:days="1"
 		:select-mode="selectMode"

@@ -116,7 +116,7 @@ export default defineComponent({
 		function newItem(index: number) {
 			const dateField = props.layoutOptions.isDatetime ? props.layoutOptions.datetime : props.layoutOptions.date;
 			if (!dateField) return;
-			const date = new Date(dayList.value[index][0][dateField].substr(0, 10));
+			const date = new Date(dayList.value[index][0].data[dateField].substr(0, 10));
 
 			router.push(`/collections/${props.collection}/+?${dateField}=${date.toISOString()}`);
 		}
@@ -204,10 +204,6 @@ export default defineComponent({
 			border-bottom: 2px solid var(--background-normal-alt);
 			cursor: pointer;
 
-			&:hover {
-				background-color: var(--background-subdued);
-			}
-
 			.time {
 				margin-right: 10px;
 				color: var(--foreground-subdued);
@@ -219,7 +215,7 @@ export default defineComponent({
 				background-color: transparent;
 			}
 
-			.event-container {
+			.event {
 				border-bottom: none;
 			}
 		}
@@ -229,9 +225,13 @@ export default defineComponent({
 				background-color: var(--foreground-subdued);
 			}
 
-			.event-container {
+			.event {
 				color: var(--foreground-subdued);
 			}
+		}
+
+		::v-deep .event:hover {
+			background-color: var(--background-subdued);
 		}
 	}
 }

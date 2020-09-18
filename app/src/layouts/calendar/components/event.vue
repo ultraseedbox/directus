@@ -79,7 +79,7 @@ export default defineComponent({
 				style['top'] = absolueTop.value + '%';
 				style['transform'] = `translate(0, ${-absolueTop.value}%)`;
 			}
-			if (color.value && color.value.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i) != null) {
+			if (props.noStyle === false && color.value && color.value.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i) != null) {
 				style['background-color'] = color.value;
 			} else {
 				style['background-color'] = '';

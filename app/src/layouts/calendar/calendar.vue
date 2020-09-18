@@ -15,7 +15,7 @@
 					show-deselect
 					item-value="field"
 					item-text="name"
-					:items="getFieldsWithType(['dateTime'])"
+					:items="getFieldsWithType(['dateTime', 'timestamp'])"
 				/>
 			</div>
 
@@ -101,7 +101,6 @@
 					:collection="collection"
 					v-model="_selection"
 					@changeView="onChangeView"
-					@wheel.native="throttledScroll($event)"
 				/>
 			</transition>
 		</div>
@@ -194,7 +193,7 @@ export default defineComponent({
 		const { collection, searchQuery } = toRefs(props);
 		const { info, primaryKeyField, fields: fieldsInCollection } = useCollection(collection);
 
-		const availableFields = computed(() => fieldsInCollection.value.filter((field) => field.meta.hidden !== true));
+		const availableFields = computed(() => fieldsInCollection.value.filter((field) => field.meta?.hidden !== true));
 
 		const { isAgenda, isDatetime, date, time, datetime, title, color } = useLayoutOptions();
 		const { limit, fields } = useLayoutQuery();
@@ -299,14 +298,6 @@ export default defineComponent({
 			return options;
 		});
 
-		function onScroll(event: WheelEvent) {
-			if (layout.value != Interval.Type.MONTH) return;
-			if (event.deltaY > 0) forwards();
-			else backwards();
-		}
-
-		const throttledScroll = throttle(onScroll, 300);
-
 		return {
 			_selection,
 			itemsWithInfo,
@@ -344,7 +335,6 @@ export default defineComponent({
 			onChangeView,
 			yearOptions,
 			selectedYear,
-			throttledScroll,
 		};
 
 		function onChangeView({ date, type }: { date: Date; type: Interval.Type }) {
@@ -469,6 +459,14 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+.layout-options {
+	.layout-option {
+		.v-tabs {
+			width: 100%;
+		}
+	}
+}
+
 .calendar {
 	display: flex;
 	flex-direction: column;

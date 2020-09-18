@@ -5,7 +5,7 @@
 		:style="style"
 		:class="{ absolute, 'no-style': noStyle, selected: value.length > 0 }"
 	>
-		<span class="title">
+		<span class="title" v-if="item !== null && collection !== null && layoutOptions.title !== null">
 			<render-template :collection="collection" :item="item.data" :template="layoutOptions.title" />
 		</span>
 		<span v-if="time" class="time">{{ time.substr(0, 5) }}</span>

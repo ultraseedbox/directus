@@ -14,6 +14,7 @@
 							@input="$emit('input', $event)"
 							:layout-options="layoutOptions"
 							:select-mode="selectMode"
+							:collection="collection"
 							no-style
 						/>
 					</div>

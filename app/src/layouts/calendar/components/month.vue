@@ -22,6 +22,7 @@
 					@input="$emit('input', $event)"
 					:select-mode="selectMode"
 					:layout-options="layoutOptions"
+					:collection="collection"
 				></event>
 			</div>
 		</div>
@@ -56,6 +57,10 @@ export default defineComponent({
 		value: {
 			type: Array as PropType<(string | number)[]>,
 			default: () => [],
+		},
+		collection: {
+			type: String,
+			default: null,
 		},
 	},
 	setup(props, { emit }) {

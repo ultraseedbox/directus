@@ -22,6 +22,7 @@
 					:item="event"
 					:layout-options="layoutOptions"
 					:select-mode="selectMode"
+					:collection="collection"
 					:absolute="(layoutOptions && layoutOptions.time != null) || layoutOptions.datetime != null"
 				></event>
 			</div>
@@ -61,6 +62,10 @@ export default defineComponent({
 		value: {
 			type: Array as PropType<(string | number)[]>,
 			default: () => [],
+		},
+		collection: {
+			type: String,
+			default: null,
 		},
 	},
 	setup(props, { emit }) {

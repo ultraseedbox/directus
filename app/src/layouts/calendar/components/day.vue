@@ -6,6 +6,7 @@
 		:days="1"
 		:select-mode="selectMode"
 		:value="value"
+		:collection="collection"
 		@input="$emit('input', $event)"
 	/>
 </template>
@@ -38,6 +39,10 @@ export default defineComponent({
 		value: {
 			type: Array as PropType<(string | number)[]>,
 			default: () => [],
+		},
+		collection: {
+			type: String,
+			default: null,
 		},
 	},
 });

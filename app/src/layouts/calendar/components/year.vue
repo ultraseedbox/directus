@@ -47,6 +47,10 @@ export default defineComponent({
 			type: Date as PropType<Date>,
 			default: null,
 		},
+		collection: {
+			type: String,
+			default: null,
+		},
 	},
 	setup(props, { emit }) {
 		const currentDay = computed(() => {

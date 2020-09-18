@@ -43,13 +43,7 @@
 
 			<div class="layout-option">
 				<div class="option-label">{{ $t('layouts.calendar.title') }}</div>
-				<v-select
-					v-model="title"
-					show-deselect
-					item-value="field"
-					item-text="name"
-					:items="getFieldsWithType(['string'])"
-				/>
+				<v-field-template v-model="title" :collection="collection" />
 			</div>
 
 			<div class="layout-option">

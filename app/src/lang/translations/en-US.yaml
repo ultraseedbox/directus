@@ -809,7 +809,14 @@ template: Template
 translation: Translation
 value: Value
 view_project: View Project
-weeks: {}
+weeks:
+  monday: Monday
+  tuesday: Tuesday
+  wednesday: Wednesday
+  thursday: Thursday
+  friday: Friday
+  saturday: Saturday
+  sunday: Sunday
 report_error: Report Error
 interfaces:
   button-links:
@@ -1107,21 +1114,22 @@ layouts:
     cozy: Cozy
   calendar:
     calendar: Calendar
-    date: Date,
-    time: Time,
-    datetime: Datetime,
-    title: Title,
-    color: Color,
+    date: Date
+    time: Time
+    datetime: Datetime
+    date-time: Date & Time
+    title: Title
+    color: Color
     today: Today
-    month: Month,
-    week: Week,
-    day: Day,
-    agenda: Agenda,
-    year: Year,
-    animations: Animations,
-    animations-enabled: Enabled,
-    animations-disabled: Disabled,
-    add-item: add new Item,
-    no-events: There are no events in between,
-    and: and,
-    activity-on: Activity on,
+    month: Month
+    week: Week
+    day: Day
+    agenda: Agenda
+    year: Year
+    animations: Animations
+    animations-enabled: Enabled
+    animations-disabled: Disabled
+    add-item: add new Item
+    no-events: There are no events in between
+    and: and
+    activity-on: Activity on

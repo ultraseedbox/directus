@@ -1,15 +1,15 @@
 <template>
 	<div class="calendar">
 		<portal to="layout-options">
-			<div class="layout-option">
+			<div class="field">
 				<v-tabs v-model="isDatetimeTabs">
 					<v-tab style="padding: unset">{{ $t('layouts.calendar.date-time') }}</v-tab>
 					<v-tab style="padding: unset">{{ $t('layouts.calendar.datetime') }}</v-tab>
 				</v-tabs>
 			</div>
 
-			<div class="layout-option" v-if="isDatetime">
-				<div class="option-label">{{ $t('layouts.calendar.datetime') }}</div>
+			<div class="field" v-if="isDatetime">
+				<div class="type-label">{{ $t('layouts.calendar.datetime') }}</div>
 				<v-select
 					v-model="datetime"
 					show-deselect
@@ -19,8 +19,8 @@
 				/>
 			</div>
 
-			<div class="layout-option" v-if="!isDatetime">
-				<div class="option-label">{{ $t('layouts.calendar.date') }}</div>
+			<div class="field" v-if="!isDatetime">
+				<div class="type-label">{{ $t('layouts.calendar.date') }}</div>
 				<v-select
 					v-model="date"
 					show-deselect
@@ -30,8 +30,8 @@
 				/>
 			</div>
 
-			<div class="layout-option" v-if="!isDatetime">
-				<div class="option-label">{{ $t('layouts.calendar.time') }}</div>
+			<div class="field" v-if="!isDatetime">
+				<div class="type-label">{{ $t('layouts.calendar.time') }}</div>
 				<v-select
 					v-model="time"
 					show-deselect
@@ -41,13 +41,13 @@
 				/>
 			</div>
 
-			<div class="layout-option">
-				<div class="option-label">{{ $t('layouts.calendar.title') }}</div>
+			<div class="field">
+				<div class="type-label">{{ $t('layouts.calendar.title') }}</div>
 				<v-field-template v-model="title" :collection="collection" />
 			</div>
 
-			<div class="layout-option">
-				<div class="option-label">{{ $t('layouts.calendar.color') }}</div>
+			<div class="field">
+				<div class="type-label">{{ $t('layouts.calendar.color') }}</div>
 				<v-select
 					v-model="color"
 					show-deselect
@@ -67,19 +67,13 @@
 					<span v-show="layout !== 'year'">{{ $t('months.' + monthNames[currentDate.getMonth()]) }}</span>
 					<v-select v-model="selectedYear" :items="yearOptions" inline></v-select>
 				</div>
-				<div class="currentDate">
-					<span v-show="viewType !== 'year'">{{ $t('months.' + monthNames[currentDate.getMonth()]) }}</span>
-					<v-select v-model="selectedYear" :items="yearOptions" inline></v-select>
-				</div>
 			</div>
 			<div class="header-center"></div>
 			<div class="header-end">
 				<v-button @click="resetCurrentDate" small :disabled="interval.isInInterval(new Date())">
 					{{ $t('layouts.calendar.today').toUpperCase() }}
 				</v-button>
-				<v-button class="dropdown" small>
-					<v-select v-model="layout" :items="viewSelection" inline></v-select>
-				</v-button>
+				<v-select class="dropdown" v-model="layout" :items="viewSelection"></v-select>
 			</div>
 		</div>
 		<div class="view">
@@ -377,26 +371,6 @@ export default defineComponent({
 			];
 		}
 
-		function getLinkForItem(item: Record<string, any>) {
-			return `/collections/${props.collection}/${item[primaryKeyField.value!.field]}`;
-		}
-
-		function updateFilters() {
-			if (dateField.value == null) return;
-
-			const from = interval.value.getStart().toISOString();
-			const to = interval.value.getEnd().toISOString();
-			_filters.value = [
-				{
-					field: dateField.value,
-					value: from + ',' + to,
-					key: 'calendar-date',
-					operator: 'between',
-					locked: true,
-				},
-			];
-		}
-
 		function getFieldsWithType(types: string[]) {
 			return availableFields.value.filter((field) => types.includes(field.type));
 		}
@@ -453,12 +427,8 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-.layout-options {
-	.layout-option {
-		.v-tabs {
-			width: 100%;
-		}
-	}
+.v-tabs {
+	width: 100%;
 }
 
 .calendar {
@@ -498,7 +468,12 @@ export default defineComponent({
 			display: flex;
 
 			.dropdown {
-				margin-left: 20px;
+				--input-height: 36px;
+
+				::v-deep .v-input {
+					width: 140px;
+					margin-left: 20px;
+				}
 			}
 		}
 	}

@@ -139,14 +139,13 @@ export default defineComponent({
 		width: 100%;
 	}
 
-		&.add {
-			.line .dot {
-				background-color: var(--foreground-subdued);
-			}
+	&.add {
+		.line .dot {
+			background-color: var(--foreground-subdued);
+		}
 
-			.content {
-				color: var(--foreground-subdued);
-			}
+		.content {
+			color: var(--foreground-subdued);
 		}
 	}
 }

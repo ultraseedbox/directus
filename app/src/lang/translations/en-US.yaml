@@ -1009,6 +1009,9 @@ interfaces:
   textarea:
     textarea: Textarea
     description: Enter multiline plain-text
+  tiptap:
+    tiptap: tiptap
+    description: A WYSIWYG text editor that outputs clean data in JSON using tiptap
   toggle:
     toggle: Toggle
     description: Switch between on and off

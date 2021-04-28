@@ -267,7 +267,7 @@ export default defineComponent({
 		},
 		placeholder: {
 			type: String,
-			default: null,
+			default: 'Write something...',
 		},
 		imageToken: {
 			type: String,

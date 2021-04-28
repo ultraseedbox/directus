@@ -10,6 +10,18 @@ export default defineInterface({
 	types: ['json'],
 	options: [
 		{
+			field: 'placeholder',
+			name: '$t:placeholder',
+			type: 'string',
+			meta: {
+				width: 'full',
+				interface: 'text-input',
+			},
+			schema: {
+				default_value: 'Write something...',
+			},
+		},
+		{
 			field: 'imageToken',
 			name: '$t:interfaces.markdown.imageToken',
 			type: 'string',

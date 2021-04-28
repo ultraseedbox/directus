@@ -8,5 +8,16 @@ export default defineInterface({
 	icon: 'waves',
 	component: InterfaceTiptap,
 	types: ['json'],
-	options: [],
+	options: [
+		{
+			field: 'imageToken',
+			name: '$t:interfaces.markdown.imageToken',
+			type: 'string',
+			meta: {
+				note: '$t:interfaces.markdown.imageToken_label',
+				width: 'full',
+				interface: 'text-input',
+			},
+		},
+	],
 });

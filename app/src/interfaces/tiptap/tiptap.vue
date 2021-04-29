@@ -1,18 +1,18 @@
 <template>
 	<div class="editor">
-		<div v-if="editorRef" class="editor__header">
+		<div v-if="editor" class="editor__header">
 			<v-menu show-arrow placement="bottom-start">
 				<template #activator="{ toggle, active }">
 					<v-button small icon @click="toggle" v-tooltip="$t('wysiwyg_options.heading')">
-						<v-icon name="format_size" :class="{ active: editorRef.isActive('heading') || active }" />
+						<v-icon name="format_size" :class="{ active: editor.isActive('heading') || active }" />
 					</v-button>
 				</template>
 				<v-list>
 					<v-list-item
 						v-for="n in 6"
 						:key="n"
-						:active="editorRef.isActive('heading', { level: n })"
-						@click="editorRef.chain().focus().toggleHeading({ level: n }).run()"
+						:active="editor.isActive('heading', { level: n })"
+						@click="editor.chain().focus().toggleHeading({ level: n }).run()"
 					>
 						<v-list-item-content><v-text-overflow :text="$t(`wysiwyg_options.h${n}`)" /></v-list-item-content>
 						<v-list-item-hint>{{ translateShortcut(['meta', 'alt']) }} {{ n }}</v-list-item-hint>
@@ -22,115 +22,115 @@
 			<v-button
 				small
 				icon
-				@click="editorRef.chain().focus().toggleBold().run()"
+				@click="editor.chain().focus().toggleBold().run()"
 				v-tooltip="$t('wysiwyg_options.bold') + ' - ' + translateShortcut(['meta', 'b'])"
 			>
-				<v-icon name="format_bold" :class="{ active: editorRef.isActive('bold') }" />
+				<v-icon name="format_bold" :class="{ active: editor.isActive('bold') }" />
 			</v-button>
 			<v-button
 				small
 				icon
-				@click="editorRef.chain().focus().toggleItalic().run()"
+				@click="editor.chain().focus().toggleItalic().run()"
 				v-tooltip="$t('wysiwyg_options.italic') + ' - ' + translateShortcut(['meta', 'i'])"
 			>
-				<v-icon name="format_italic" :class="{ active: editorRef.isActive('italic') }" />
+				<v-icon name="format_italic" :class="{ active: editor.isActive('italic') }" />
 			</v-button>
 			<v-button
 				small
 				icon
-				@click="editorRef.chain().focus().toggleUnderline().run()"
+				@click="editor.chain().focus().toggleUnderline().run()"
 				v-tooltip="$t('wysiwyg_options.underline') + ' - ' + translateShortcut(['meta', 'u'])"
 			>
-				<v-icon name="format_underline" :class="{ active: editorRef.isActive('underline') }" />
+				<v-icon name="format_underline" :class="{ active: editor.isActive('underline') }" />
 			</v-button>
 			<v-button
 				small
 				icon
-				@click="editorRef.chain().focus().toggleStrike().run()"
+				@click="editor.chain().focus().toggleStrike().run()"
 				v-tooltip="$t('wysiwyg_options.strikethrough') + ' - ' + translateShortcut(['meta', 'shift', 'x'])"
 			>
-				<v-icon name="format_strikethrough" :class="{ active: editorRef.isActive('strike') }" />
+				<v-icon name="format_strikethrough" :class="{ active: editor.isActive('strike') }" />
 			</v-button>
 
 			<v-button small icon @click="setLink()" v-tooltip="$t('wysiwyg_options.link')">
-				<v-icon name="insert_link" :class="{ active: editorRef.isActive('link') }" />
+				<v-icon name="insert_link" :class="{ active: editor.isActive('link') }" />
 			</v-button>
 
 			<v-button
 				small
 				icon
-				@click="editorRef.chain().focus().setTextAlign('left').run()"
+				@click="editor.chain().focus().setTextAlign('left').run()"
 				v-tooltip="$t('wysiwyg_options.alignleft') + ' - ' + translateShortcut(['meta', 'shift', 'l'])"
 			>
-				<v-icon name="format_align_left" :class="{ active: editorRef.isActive({ textAlign: 'left' }) }" />
+				<v-icon name="format_align_left" :class="{ active: editor.isActive({ textAlign: 'left' }) }" />
 			</v-button>
 			<v-button
 				small
 				icon
-				@click="editorRef.chain().focus().setTextAlign('center').run()"
+				@click="editor.chain().focus().setTextAlign('center').run()"
 				v-tooltip="$t('wysiwyg_options.aligncenter') + ' - ' + translateShortcut(['meta', 'shift', 'e'])"
 			>
-				<v-icon name="format_align_center" :class="{ active: editorRef.isActive({ textAlign: 'center' }) }" />
+				<v-icon name="format_align_center" :class="{ active: editor.isActive({ textAlign: 'center' }) }" />
 			</v-button>
 			<v-button
 				small
 				icon
-				@click="editorRef.chain().focus().setTextAlign('right').run()"
+				@click="editor.chain().focus().setTextAlign('right').run()"
 				v-tooltip="$t('wysiwyg_options.alignright') + ' - ' + translateShortcut(['meta', 'shift', 'r'])"
 			>
-				<v-icon name="format_align_right" :class="{ active: editorRef.isActive({ textAlign: 'right' }) }" />
+				<v-icon name="format_align_right" :class="{ active: editor.isActive({ textAlign: 'right' }) }" />
 			</v-button>
 			<v-button
 				small
 				icon
-				@click="editorRef.chain().focus().setTextAlign('justify').run()"
+				@click="editor.chain().focus().setTextAlign('justify').run()"
 				v-tooltip="$t('wysiwyg_options.alignjustify') + ' - ' + translateShortcut(['meta', 'shift', 'j'])"
 			>
-				<v-icon name="format_align_justify" :class="{ active: editorRef.isActive({ textAlign: 'justify' }) }" />
+				<v-icon name="format_align_justify" :class="{ active: editor.isActive({ textAlign: 'justify' }) }" />
 			</v-button>
 
 			<v-button
 				small
 				icon
-				@click="editorRef.chain().focus().toggleBulletList().run()"
+				@click="editor.chain().focus().toggleBulletList().run()"
 				v-tooltip="$t('wysiwyg_options.bullist') + ' - ' + translateShortcut(['meta', 'shift']) + '8'"
 			>
-				<v-icon name="format_list_bulleted" :class="{ active: editorRef.isActive('bulletList') }" />
+				<v-icon name="format_list_bulleted" :class="{ active: editor.isActive('bulletList') }" />
 			</v-button>
 			<v-button
 				small
 				icon
-				@click="editorRef.chain().focus().toggleOrderedList().run()"
+				@click="editor.chain().focus().toggleOrderedList().run()"
 				v-tooltip="$t('wysiwyg_options.numlist') + ' - ' + translateShortcut(['meta', 'shift']) + '7'"
 			>
-				<v-icon name="format_list_numbered" :class="{ active: editorRef.isActive('orderedList') }" />
+				<v-icon name="format_list_numbered" :class="{ active: editor.isActive('orderedList') }" />
 			</v-button>
 			<v-button
 				small
 				icon
-				@click="editorRef.chain().focus().toggleBlockquote().run()"
+				@click="editor.chain().focus().toggleBlockquote().run()"
 				v-tooltip="$t('wysiwyg_options.blockquote') + ' - ' + translateShortcut(['meta', 'shift', 'b'])"
 			>
-				<v-icon name="format_quote" :class="{ active: editorRef.isActive('blockquote') }" />
+				<v-icon name="format_quote" :class="{ active: editor.isActive('blockquote') }" />
 			</v-button>
 
 			<v-button
 				small
 				icon
-				@click="editorRef.chain().focus().setHorizontalRule().run()"
+				@click="editor.chain().focus().setHorizontalRule().run()"
 				v-tooltip="$t('wysiwyg_options.hr')"
 			>
-				<v-icon name="horizontal_rule" :class="{ active: editorRef.isActive('horizontalRule') }" />
+				<v-icon name="horizontal_rule" :class="{ active: editor.isActive('horizontalRule') }" />
 			</v-button>
 
 			<v-button small icon @click="setImage()" v-tooltip="$t('wysiwyg_options.image')">
-				<v-icon name="insert_photo" :class="{ active: editorRef.isActive('image') }" />
+				<v-icon name="insert_photo" :class="{ active: editor.isActive('image') }" />
 			</v-button>
 
 			<v-button
 				small
 				icon
-				@click="editorRef.chain().focus().undo().run()"
+				@click="editor.chain().focus().undo().run()"
 				v-tooltip="$t('wysiwyg_options.undo') + ' - ' + translateShortcut(['meta', 'z'])"
 			>
 				<v-icon name="undo" />
@@ -138,7 +138,7 @@
 			<v-button
 				small
 				icon
-				@click="editorRef.chain().focus().redo().run()"
+				@click="editor.chain().focus().redo().run()"
 				v-tooltip="$t('wysiwyg_options.redo') + ' - ' + translateShortcut(['meta', 'shift', 'z'])"
 			>
 				<v-icon name="redo" />
@@ -146,14 +146,14 @@
 			<v-button
 				small
 				icon
-				@click="editorRef.chain().focus().clearNodes().unsetAllMarks().run()"
+				@click="editor.chain().focus().clearNodes().unsetAllMarks().run()"
 				v-tooltip="$t('wysiwyg_options.removeformat')"
 			>
 				<v-icon name="format_clear" />
 			</v-button>
 		</div>
 
-		<EditorContent class="editor__content" :editor="editorRef" />
+		<EditorContent class="editor__content" :editor="editor" />
 
 		<v-dialog v-model="linkDialogOpen">
 			<v-card>
@@ -216,8 +216,8 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onBeforeUnmount, watch, ref, toRefs } from '@vue/composition-api';
-import { Editor, EditorContent } from '@tiptap/vue-2';
+import { defineComponent, onMounted, onBeforeUnmount, watch, ref, toRefs } from '@vue/composition-api';
+import { Editor, EditorContent, Content } from '@tiptap/vue-2';
 
 import Blockquote from '@tiptap/extension-blockquote';
 import Bold from '@tiptap/extension-bold';
@@ -249,13 +249,13 @@ import { getPublicURL } from '@/utils/get-root-path';
 import { addTokenToURL } from '@/api';
 
 type ImageSelection = {
-	imageUrl: string | null;
-	title: string | null;
-	description: string | null;
+	imageUrl: string;
+	title: string;
+	description: string;
 };
 
 type LinkSelection = {
-	url: string | null;
+	url: string;
 	newTab: boolean;
 };
 
@@ -264,6 +264,7 @@ export default defineComponent({
 	props: {
 		value: {
 			type: Object,
+			default: null,
 		},
 		placeholder: {
 			type: String,
@@ -275,58 +276,20 @@ export default defineComponent({
 		},
 	},
 	setup(props, { emit }) {
-		const editorRef = ref<any | null>(null);
-		editorRef.value = new Editor({
-			extensions: [
-				Blockquote,
-				Bold,
-				BulletList,
-				Document,
-				Dropcursor,
-				Gapcursor,
-				HardBreak,
-				Heading,
-				Highlight,
-				History,
-				HorizontalRule,
-				Image,
-				Italic,
-				Link.configure({
-					openOnClick: false,
-				}),
-				ListItem,
-				OrderedList,
-				Paragraph,
-				Placeholder.configure({
-					placeholder: props.placeholder,
-				}),
-				Strike,
-				TextAlign,
-				TextStyle,
-				Text,
-				Typography,
-				Underline,
-			],
-			content: props.value,
-			onUpdate: () => {
-				emit('input', editorRef.value.getJSON());
-			},
-		});
-
 		const { imageToken } = toRefs(props);
 
 		const imageDialogOpen = ref(false);
 		const imageSelection = ref<ImageSelection>({
-			imageUrl: null,
-			title: null,
-			description: null,
+			imageUrl: '',
+			title: '',
+			description: '',
 		});
 
 		function defaultImageSelection() {
 			imageSelection.value = {
-				imageUrl: null,
-				title: null,
-				description: null,
+				imageUrl: '',
+				title: '',
+				description: '',
 			};
 		}
 
@@ -352,15 +315,15 @@ export default defineComponent({
 		function saveImage() {
 			const img = imageSelection.value;
 			if (img === null) return;
-			editorRef.value.chain().focus().setImage({ src: img.imageUrl, alt: img.title, title: img.description }).run();
+			editor.value?.chain().focus().setImage({ src: img.imageUrl, alt: img.title, title: img.description }).run();
 			closeImageDialog();
 		}
 
 		function setImage() {
 			imageDialogOpen.value = true;
 
-			if (editorRef.value.isActive('image')) {
-				const attrs = editorRef.value.getNodeAttributes('image');
+			if (editor.value?.isActive('image')) {
+				const attrs = editor.value?.getNodeAttributes('image');
 				console.log({ attrs });
 				const imageUrl = attrs.src;
 				const title = attrs.alt;
@@ -382,13 +345,13 @@ export default defineComponent({
 
 		const linkDialogOpen = ref(false);
 		const linkSelection = ref<LinkSelection>({
-			url: null,
+			url: '',
 			newTab: true,
 		});
 
 		function defaultLinkSelection() {
 			linkSelection.value = {
-				url: null,
+				url: '',
 				newTab: true,
 			};
 		}
@@ -401,8 +364,8 @@ export default defineComponent({
 		function saveLink() {
 			const link = linkSelection.value;
 			if (link.url === null) return;
-			editorRef.value
-				.chain()
+			editor.value
+				?.chain()
 				.focus()
 				.setLink({ href: link.url, target: link.newTab ? '_blank' : '_self' })
 				.run();
@@ -412,8 +375,8 @@ export default defineComponent({
 		function setLink() {
 			linkDialogOpen.value = true;
 
-			if (editorRef.value.isActive('link')) {
-				const attrs = editorRef.value.getMarkAttributes('link');
+			if (editor.value?.isActive('link')) {
+				const attrs = editor.value?.getMarkAttributes('link');
 				const url = attrs.href;
 				const target = attrs.target;
 
@@ -430,19 +393,60 @@ export default defineComponent({
 			}
 		}
 
+		const editor = ref<Editor>();
+
+		onMounted(() => {
+			editor.value = new Editor({
+				extensions: [
+					Blockquote,
+					Bold,
+					BulletList,
+					Document,
+					Dropcursor,
+					Gapcursor,
+					HardBreak,
+					Heading,
+					Highlight,
+					History,
+					HorizontalRule,
+					Image,
+					Italic,
+					Link.configure({
+						openOnClick: false,
+					}),
+					ListItem,
+					OrderedList,
+					Paragraph,
+					Placeholder.configure({
+						placeholder: props.placeholder,
+					}),
+					Strike,
+					TextAlign,
+					TextStyle,
+					Text,
+					Typography,
+					Underline,
+				],
+				content: props.value,
+				onUpdate: () => {
+					emit('input', editor.value?.getJSON());
+				},
+			});
+		});
+
+		onBeforeUnmount(() => {
+			editor.value?.destroy();
+		});
+
 		watch(
 			() => props.value,
-			(newValue) => {
-				editorRef.value?.commands.setContent(newValue, false);
+			(newValue: Content) => {
+				editor.value?.commands.setContent(newValue, false);
 			}
 		);
 
-		onBeforeUnmount(() => {
-			editorRef.value.destroy();
-		});
-
 		return {
-			editorRef,
+			editor,
 			imageDialogOpen,
 			imageSelection,
 			closeImageDialog,
@@ -537,135 +541,143 @@ export default defineComponent({
 		&::placeholder {
 			color: var(--foreground-subdued);
 		}
+
 		::v-deep {
 			/* Basic editor styles */
 			.ProseMirror {
 				> * + * {
 					margin-top: 0.75em;
 				}
-			}
 
-			/* Placeholder (at the top) */
-			.ProseMirror p.is-editor-empty:first-child::before {
-				float: left;
-				height: 0;
-				color: var(--foreground-subdued);
-				content: attr(data-placeholder);
-				pointer-events: none;
-			}
-			body {
-				margin: 20px;
-				color: var(--foreground-normal);
-				font-family: var(--family-sans-serif);
-				background-color: var(--background-input);
-				-webkit-font-smoothing: antialiased;
-				text-rendering: optimizeLegibility;
-				-moz-osx-font-smoothing: grayscale;
-			}
-			h1 {
-				margin-bottom: 0;
-				font-weight: 300;
-				font-size: 44px;
-				line-height: 52px;
-			}
-			h2 {
-				margin-top: 40px;
-				margin-bottom: 0;
-				font-weight: 600;
-				font-size: 34px;
-				line-height: 38px;
-			}
-			h3 {
-				margin-top: 40px;
-				margin-bottom: 0;
-				font-weight: 600;
-				font-size: 26px;
-				line-height: 31px;
-			}
-			h4 {
-				margin-top: 40px;
-				margin-bottom: 0;
-				font-weight: 600;
-				font-size: 22px;
-				line-height: 28px;
-			}
-			h5 {
-				margin-top: 40px;
-				margin-bottom: 0;
-				font-weight: 600;
-				font-size: 18px;
-				line-height: 26px;
-			}
-			h6 {
-				margin-top: 40px;
-				margin-bottom: 0;
-				font-weight: 600;
-				font-size: 16px;
-				line-height: 24px;
-			}
-			p {
-				margin-top: 20px;
-				margin-bottom: 20px;
-				font-size: 16px;
-				line-height: 32px;
-			}
-			a {
-				color: #546e7a;
-			}
-			ul,
-			ol {
-				margin: 24px 0;
-				font-size: 18px;
-				line-height: 34px;
-			}
-			ul ul,
-			ol ol,
-			ul ol,
-			ol ul {
-				margin: 0;
-			}
-			b,
-			strong {
-				font-weight: 600;
-			}
-			blockquote {
-				margin-left: -10px;
-				padding-left: 10px;
-				font-size: 18px;
-				font-style: italic;
-				line-height: 34px;
-				border-left: 2px solid var(--border-normal);
-			}
-			video,
-			iframe,
-			img {
-				max-width: 100%;
-				height: auto;
-				border-radius: 4px;
-			}
-			hr {
-				margin-top: 52px;
-				margin-bottom: 56px;
-				text-align: center;
-				border: 1px solid var(--border-normal);
-			}
-			table {
-				border-collapse: collapse;
-			}
-			table th,
-			table td {
-				padding: 0.4rem;
-				border: 1px solid var(--foreground-normal-alt);
-			}
-			figure {
-				display: table;
-				margin: 1rem auto;
-			}
-			figure figcaption {
-				display: block;
-				margin-top: 0.25rem;
-				color: var(--foreground-subdued);
-				text-align: center;
+				p.is-editor-empty:first-child::before {
+					float: left;
+					height: 0;
+					color: var(--foreground-subdued);
+					content: attr(data-placeholder);
+					pointer-events: none;
+				}
+
+				img.ProseMirror-selectednode {
+					outline: 4px solid var(--primary);
+					transition: var(--fast) var(--transition);
+					transition-property: outline;
+				}
+
+				body {
+					margin: 20px;
+					color: var(--foreground-normal);
+					font-family: var(--family-sans-serif);
+					background-color: var(--background-input);
+					-webkit-font-smoothing: antialiased;
+					text-rendering: optimizeLegibility;
+					-moz-osx-font-smoothing: grayscale;
+				}
+				h1 {
+					margin-bottom: 0;
+					font-weight: 300;
+					font-size: 44px;
+					line-height: 52px;
+				}
+				h2 {
+					margin-top: 40px;
+					margin-bottom: 0;
+					font-weight: 600;
+					font-size: 34px;
+					line-height: 38px;
+				}
+				h3 {
+					margin-top: 40px;
+					margin-bottom: 0;
+					font-weight: 600;
+					font-size: 26px;
+					line-height: 31px;
+				}
+				h4 {
+					margin-top: 40px;
+					margin-bottom: 0;
+					font-weight: 600;
+					font-size: 22px;
+					line-height: 28px;
+				}
+				h5 {
+					margin-top: 40px;
+					margin-bottom: 0;
+					font-weight: 600;
+					font-size: 18px;
+					line-height: 26px;
+				}
+				h6 {
+					margin-top: 40px;
+					margin-bottom: 0;
+					font-weight: 600;
+					font-size: 16px;
+					line-height: 24px;
+				}
+				p {
+					margin-top: 20px;
+					margin-bottom: 20px;
+					font-size: 16px;
+					line-height: 32px;
+				}
+				a {
+					color: var(--primary);
+					text-decoration: underline;
+				}
+				ul,
+				ol {
+					margin: 24px 0;
+					font-size: 18px;
+					line-height: 34px;
+				}
+				ul ul,
+				ol ol,
+				ul ol,
+				ol ul {
+					margin: 0;
+				}
+				b,
+				strong {
+					font-weight: 600;
+				}
+				blockquote {
+					margin-left: -10px;
+					padding-left: 10px;
+					font-size: 18px;
+					font-style: italic;
+					line-height: 34px;
+					border-left: 2px solid var(--border-normal);
+				}
+				video,
+				iframe,
+				img {
+					max-width: 100%;
+					height: auto;
+					border-radius: 4px;
+				}
+				hr {
+					margin-top: 52px;
+					margin-bottom: 56px;
+					text-align: center;
+					border: 1px solid var(--border-normal);
+				}
+				table {
+					border-collapse: collapse;
+				}
+				table th,
+				table td {
+					padding: 0.4rem;
+					border: 1px solid var(--foreground-normal-alt);
+				}
+				figure {
+					display: table;
+					margin: 1rem auto;
+				}
+				figure figcaption {
+					display: block;
+					margin-top: 0.25rem;
+					color: var(--foreground-subdued);
+					text-align: center;
+				}
 			}
 		}
 	}

@@ -1,8 +1,8 @@
 <template>
-	<v-notice type="warning" v-if="!relation">
-		{{ $t('relationship_not_setup') }}
+	<v-notice v-if="!relation" type="warning">
+		{{ t('relationship_not_setup') }}
 	</v-notice>
-	<div class="one-to-many" v-else>
+	<div v-else class="one-to-many">
 		<template v-if="loading">
 			<v-skeleton-loader
 				v-for="n in (value || []).length || 3"
@@ -12,39 +12,46 @@
 		</template>
 
 		<v-notice v-else-if="sortedItems.length === 0">
-			{{ $t('no_items') }}
+			{{ t('no_items') }}
 		</v-notice>
 
 		<v-list v-else>
 			<draggable
 				:force-fallback="true"
-				:value="sortedItems"
-				@input="sortItems($event)"
-				handler=".drag-handle"
-				:disabled="!relation.sort_field"
+				:model-value="sortedItems"
+				item-key="id"
+				handle=".drag-handle"
+				:disabled="!relation.meta.sort_field"
+				@update:model-value="sortItems($event)"
 			>
-				<v-list-item
-					:dense="sortedItems.length > 4"
-					v-for="item in sortedItems"
-					:key="item.id"
-					block
-					:disabled="disabled || updateAllowed === false"
-					@click="editItem(item)"
-				>
-					<v-icon v-if="relation.sort_field" name="drag_handle" class="drag-handle" left @click.stop="() => {}" />
-					<render-template :collection="relation.many_collection" :item="item" :template="templateWithDefaults" />
-					<div class="spacer" />
-					<v-icon v-if="!disabled && updateAllowed" name="close" @click.stop="deleteItem(item)" />
-				</v-list-item>
+				<template #item="{ element }">
+					<v-list-item
+						:dense="sortedItems.length > 4"
+						block
+						:disabled="disabled || updateAllowed === false"
+						@click="editItem(element)"
+					>
+						<v-icon
+							v-if="relation.meta.sort_field"
+							name="drag_handle"
+							class="drag-handle"
+							left
+							@click.stop="() => {}"
+						/>
+						<render-template :collection="relation.collection" :item="element" :template="templateWithDefaults" />
+						<div class="spacer" />
+						<v-icon v-if="!disabled && updateAllowed" name="close" @click.stop="deleteItem(element)" />
+					</v-list-item>
+				</template>
 			</draggable>
 		</v-list>
 
-		<div class="actions" v-if="!disabled">
+		<div v-if="!disabled" class="actions">
 			<v-button v-if="enableCreate && createAllowed && updateAllowed" @click="currentlyEditing = '+'">
-				{{ $t('create_new') }}
+				{{ t('create_new') }}
 			</v-button>
 			<v-button v-if="enableSelect && updateAllowed" @click="selectModalActive = true">
-				{{ $t('add_existing') }}
+				{{ t('add_existing') }}
 			</v-button>
 		</div>
 
@@ -54,31 +61,33 @@
 			:collection="relatedCollection.collection"
 			:primary-key="currentlyEditing || '+'"
 			:edits="editsAtStart"
-			:circular-field="relation.many_field"
+			:circular-field="relation.field"
 			@input="stageEdits"
 			@update:active="cancelEdit"
 		/>
 
 		<drawer-collection
 			v-if="!disabled"
-			:active.sync="selectModalActive"
+			v-model:active="selectModalActive"
 			:collection="relatedCollection.collection"
 			:selection="[]"
 			:filters="selectionFilters"
-			@input="stageSelection"
 			multiple
+			@input="stageSelection"
 		/>
 	</div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, watch, PropType } from '@vue/composition-api';
+import { useI18n } from 'vue-i18n';
+import { defineComponent, ref, computed, watch, PropType } from 'vue';
 import api from '@/api';
 import useCollection from '@/composables/use-collection';
 import { useCollectionsStore, useRelationsStore, useFieldsStore, usePermissionsStore, useUserStore } from '@/stores/';
 import DrawerItem from '@/views/private/components/drawer-item';
 import DrawerCollection from '@/views/private/components/drawer-collection';
-import { Filter, Field } from '@/types';
+import { Relation } from '@/types';
+import { Filter, Field } from '@directus/shared/types';
 import { isEqual, sortBy } from 'lodash';
 import { get } from 'lodash';
 import { unexpectedError } from '@/utils/unexpected-error';
@@ -123,7 +132,10 @@ export default defineComponent({
 			default: true,
 		},
 	},
+	emits: ['input'],
 	setup(props, { emit }) {
+		const { t } = useI18n();
+
 		const relationsStore = useRelationsStore();
 		const collectionsStore = useCollectionsStore();
 		const fieldsStore = useFieldsStore();
@@ -133,7 +145,10 @@ export default defineComponent({
 		const { relation, relatedCollection, relatedPrimaryKeyField } = useRelation();
 
 		const templateWithDefaults = computed(
-			() => props.template || relatedCollection.value.meta?.display_template || `{{${relation.value.many_primary}}}`
+			() =>
+				props.template ||
+				relatedCollection.value.meta?.display_template ||
+				`{{${fieldsStore.getPrimaryKeyFieldForCollection(relation.value.collection).field}}}`
 		);
 
 		const fields = computed(() =>
@@ -148,6 +163,7 @@ export default defineComponent({
 		const { createAllowed, updateAllowed } = usePermissions();
 
 		return {
+			t,
 			relation,
 			loading,
 			currentlyEditing,
@@ -234,13 +250,13 @@ export default defineComponent({
 		}
 
 		function useSort() {
-			const sort = ref({ by: relation.value.sort_field || fields.value[0], desc: false });
+			const sort = ref({ by: relation.value.meta?.sort_field || fields.value[0], desc: false });
 
 			function sortItems(newItems: Record<string, any>[]) {
-				if (relation.value.sort_field === null) return;
+				if (!relation.value.meta?.sort_field) return;
 
 				const itemsSorted = newItems.map((item, i) => {
-					item[relation.value.sort_field] = i;
+					item[relation.value.meta!.sort_field!] = i;
 					return item;
 				});
 
@@ -248,10 +264,10 @@ export default defineComponent({
 			}
 
 			const sortedItems = computed(() => {
-				if (relation.value.sort_field === null || sort.value.by !== relation.value.sort_field) return items.value;
+				if (!relation.value.meta?.sort_field || sort.value.by !== relation.value.meta?.sort_field) return items.value;
 
 				const desc = sort.value.desc;
-				const sorted = sortBy(items.value, [relation.value.sort_field]);
+				const sorted = sortBy(items.value, [relation.value.meta.sort_field]);
 				return desc ? sorted.reverse() : sorted;
 			});
 
@@ -263,12 +279,12 @@ export default defineComponent({
 		 * of the other collection etc
 		 */
 		function useRelation() {
-			const relation = computed(() => {
+			const relation = computed<Relation>(() => {
 				return relationsStore.getRelationsForField(props.collection, props.field)?.[0];
 			});
 
 			const relatedCollection = computed(() => {
-				return collectionsStore.getCollection(relation.value.many_collection)!;
+				return collectionsStore.getCollection(relation.value.collection)!;
 			});
 
 			const { primaryKeyField: relatedPrimaryKeyField } = useCollection(relatedCollection.value.collection);
@@ -292,8 +308,8 @@ export default defineComponent({
 						fieldsList.push(pkField);
 					}
 
-					if (relation.value.sort_field !== null && fieldsList.includes(relation.value.sort_field) === false)
-						fieldsList.push(relation.value.sort_field);
+					if (relation.value.meta?.sort_field && fieldsList.includes(relation.value.meta.sort_field) === false)
+						fieldsList.push(relation.value.meta.sort_field);
 
 					const fieldsToFetch = addRelatedPrimaryKeyToFields(relatedCollection.value.collection, fieldsList);
 
@@ -449,19 +465,19 @@ export default defineComponent({
 
 		function usePermissions() {
 			const createAllowed = computed(() => {
-				const admin = userStore.state?.currentUser?.role.admin_access === true;
+				const admin = userStore.currentUser?.role.admin_access === true;
 				if (admin) return true;
 
-				return !!permissionsStore.state.permissions.find(
+				return !!permissionsStore.permissions.find(
 					(permission) => permission.action === 'create' && permission.collection === relatedCollection.value.collection
 				);
 			});
 
 			const updateAllowed = computed(() => {
-				const admin = userStore.state?.currentUser?.role.admin_access === true;
+				const admin = userStore.currentUser?.role.admin_access === true;
 				if (admin) return true;
 
-				return !!permissionsStore.state.permissions.find(
+				return !!permissionsStore.permissions.find(
 					(permission) => permission.action === 'update' && permission.collection === relatedCollection.value.collection
 				);
 			});

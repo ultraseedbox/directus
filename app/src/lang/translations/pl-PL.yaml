@@ -4,11 +4,17 @@ item_revision: Wersja elementu
 duplicate_field: Duplikuj pole
 half_width: Połowa szerokości
 full_width: Pełna szerokość
+group: Grupa
 fill_width: Szerokość wypełnienia
 field_name_translations: Tłumaczenie nazwy pola
 enter_password_to_enable_tfa: Wprowadź hasło, aby włączyć uwierzytelnianie dwuetapowe
 add_field: Dodaj pole
 role_name: Nazwa roli
+branch: Gałąź
+leaf: Arkusz
+indeterminate: Nieokreślony
+exclusive: Ekskluzywny
+children: Podrzędne
 db_only_click_to_configure: 'Tylko baza danych: Kliknij, aby skonfigurować '
 show_archived_items: Pokaż zarchiwizowane elementy
 edited: Wartość zmieniona
@@ -20,7 +26,7 @@ create_role: Stwórz rolę
 create_user: Utwórz użytkownika
 create_webhook: Stwórz webhook
 invite_users: Zaproś użytkowników
-email_examples: 'admin@example.com, użytkownik@example.com...'
+email_examples: "admin@example.com, użytkownik@example.com..."
 invite: Zaproś
 email_already_invited: E-mail "{email}" został już zaproszony
 emails: E-maile
@@ -55,12 +61,9 @@ os_totalmem: Pamięć Systemu
 archive: Archiwum
 archive_confirm: Jesteś pewien, że chcesz zarchiwizować ten element?
 archive_confirm_count: >-
-  Brak zaznaczonych elementów | Czy na pewno chcesz zarchiwizować ten element? | Czy na pewno chcesz zarchiwizować te
-  {count} elementy?
+  Brak zaznaczonych elementów | Czy na pewno chcesz zarchiwizować ten element? | Czy na pewno chcesz zarchiwizować te {count} elementy?
 reset_system_permissions_to: 'Resetuj uprawnienia systemowe:'
-reset_system_permissions_copy:
-  Ta akcja nadpisze wszelkie uprawnienia niestandardowe, które mogły być zastosowane do kolekcji systemowych. Czy jesteś
-  pewien?
+reset_system_permissions_copy: Ta akcja nadpisze wszelkie uprawnienia niestandardowe, które mogły być zastosowane do kolekcji systemowych. Czy jesteś pewien?
 the_following_are_minimum_permissions: Poniższe uprawnienia są wymagane, gdy "Dostęp do aplikacji" jest włączony.
 app_access_minimum: Minimalny dostęp do aplikacji
 recommended_defaults: Zalecane ustawienia domyślne
@@ -101,6 +104,7 @@ field_m2a: Powiązanie M2A
 field_o2m: Powiązanie 02M
 field_m2m: Powiązanie M2M
 field_translations: Tłumaczenia
+field_group: Grupa pól
 item_permissions: Uprawnienia
 field_permissions: Uprawnienia pola
 field_validation: Walidacja pola
@@ -165,8 +169,7 @@ this_will_auto_setup_fields_relations: Spowoduje to automatyczne ustawienie wszy
 click_here: Kliknij tutaj
 to_manually_setup_translations: aby ręcznie ustawić tłumaczenia.
 click_to_manage_translated_fields: >-
-  Nie ma jeszcze tłumaczonych pól. Kliknij tutaj, aby je stworzyć. | Istnieje jedno tłumaczone pole. Kliknij tutaj, aby
-  nim zarządzać. | Istnieją {count} tłumaczone pól. Kliknij tutaj, aby nimi zarządzać.
+  Nie ma jeszcze przetłumaczonych pól. Kliknij tutaj, aby je stworzyć. | Istnieje jedno przetłumaczone pole. Kliknij tutaj, aby nim zarządzać. | Ilość przetłumaczonych pół: {count}. Kliknij tutaj, aby nimi zarządzać.
 fields_group: Grupa pól
 no_collections_found: Nie znaleziono żadnych kolekcji.
 new_data_alert: 'W modelu danych zostaną utworzone następujące elementy:'
@@ -369,7 +372,7 @@ field_width: Szerokość pola
 add_filter: Dodaj Filtr
 upper_limit: Górny limit...
 lower_limit: Dolny limit...
-user_directory: Katalog użytkownika
+user_directory: Katalog użytkowników
 documentation: Dokumentacja
 sidebar: Pasek boczny
 duration: Czas trwania
@@ -383,6 +386,7 @@ sort_field: Pole sortowania
 add_sort_field: Dodaj pole sortowania
 sort: Sortuj
 status: Status
+remove: Usuń
 toggle_manual_sorting: Przełącz ręczne sortowanie
 bookmark_doesnt_exist: Zakładka nie istnieje
 bookmark_doesnt_exist_copy: Nie znaleziono zakładki, którą próbujesz otworzyć.
@@ -398,7 +402,7 @@ account_created_successfully: Konto utworzone pomyślnie
 auto_fill: Automatyczne wypełnianie
 corresponding_field: Odpowiednie pole
 errors:
-  COLLECTION_NOT_FOUND: 'Kolekcja nie istnieje'
+  COLLECTION_NOT_FOUND: "Kolekcja nie istnieje"
   FIELD_NOT_FOUND: Nie znaleziono pola
   FORBIDDEN: Zabronione
   INVALID_CREDENTIALS: Nieprawidłowa nazwa użytkownika lub hasło
@@ -412,6 +416,7 @@ errors:
   USER_SUSPENDED: Użytkownik zawieszony
   CONTAINS_NULL_VALUES: Pole zawiera pustą wartość (Null)
   UNKNOWN: Nieoczekiwany błąd
+  INTERNAL_SERVER_ERROR: Nieoczekiwany błąd
 value_hashed: Wartość bezpiecznie zakodowana
 bookmark_name: Nazwa zakładki...
 create_bookmark: Utwórz zakładkę
@@ -442,8 +447,7 @@ start_end_of_count_filtered_items: '{start}-{end} z {count} przefiltrowanych prz
 one_item: '1 element'
 one_filtered_item: '1 przefiltrowany element'
 delete_collection_are_you_sure: >-
-  Czy na pewno chcesz usunąć tę kolekcję? Spowoduje to usunięcie kolekcji i wszystkich jej elementów. Ta akcja jest
-  trwała.
+  Czy na pewno chcesz usunąć tę kolekcję? Spowoduje to usunięcie kolekcji i wszystkich jej elementów. Ta akcja jest trwała.
 collections_shown: Wyświetlane kolekcje
 visible_collections: Widoczne kolekcje
 hidden_collections: Ukryte kolekcje
@@ -480,6 +484,10 @@ operators:
   nnull: Nie jest puste
   contains: Zawiera
   ncontains: Nie zawiera
+  starts_with: Zaczyna się od
+  nstarts_with: Nie zaczyna się od
+  ends_with: Kończy się na
+  nends_with: Nie kończy się na
   between: Jest pomiędzy
   nbetween: Nie jest pomiędzy
   empty: Jest pusty
@@ -507,6 +515,8 @@ value_unique: Wartość musi być unikalna
 all_activity: Wszystkie aktywności
 create_item: Utwórz element
 display_template: Wyświetl szablon
+language_display_template: Szablon wyświetlanego języka
+translations_display_template: Szablon wyświetlania tłumaczeń
 n_items_selected: 'Nie wybrano elementów | 1 wybrany element | {n} wybranych elementów'
 per_page: Na stronę
 all_files: Wszystkie pliki
@@ -635,39 +645,31 @@ discard_changes: Odrzuć zmiany.
 keep_editing: Kontynuuj edycję
 page_help_collections_overview: '**Przegląd kolekcji** — Lista wszystkich kolekcji, do których masz dostęp.'
 page_help_collections_collection: >-
-  **Przeglądaj przedmioty** — Lista wszystkich {collection} elementów, do których masz dostęp. Dostosuj układ, filtry i
-  sortowanie w celu dostosowania widoku, a nawet zapisz zakładki z tych różnych konfiguracji, aby uzyskać szybki dostęp.
+  **Przeglądaj przedmioty** — Lista wszystkich {collection} elementów, do których masz dostęp. Dostosuj układ, filtry i sortowanie w celu dostosowania widoku, a nawet zapisz zakładki z tych różnych konfiguracji, aby uzyskać szybki dostęp.
 page_help_collections_item: >-
-  **Szczegóły pozycji** — Formularz do przeglądania i zarządzania tą pozycją. Ten pasek boczny zawiera również pełną
-  historię zmian i osadzonych komentarzy.
+  **Szczegóły pozycji** — Formularz do przeglądania i zarządzania tą pozycją. Ten pasek boczny zawiera również pełną historię zmian i osadzonych komentarzy.
 page_help_activity_collection: >-
   **Przeglądaj Aktywność** — Kompleksowa lista wszystkich działań Twojego użytkownika systemowego i jego treści.
 page_help_docs_global: >-
   **Przegląd dokumentacji** — Dokumenty dostosowane do wersji i schematu tego projektu.
 page_help_files_collection: >-
-  **Biblioteka plików** — Lista wszystkich zasobów plików przesłanych do tego projektu. Dostosuj układ, filtry i
-  sortowanie w celu dostosowania widoku, a nawet zapisz zakładki z tych różnych konfiguracji, aby uzyskać szybki dostęp.
+  **Biblioteka plików** — Lista wszystkich zasobów plików przesłanych do tego projektu. Dostosuj układ, filtry i sortowanie w celu dostosowania widoku, a nawet zapisz zakładki z tych różnych konfiguracji, aby uzyskać szybki dostęp.
 page_help_files_item: >-
-  **Szczegóły pliku** — Formularz do zarządzania metadanymi plików, edycji oryginalnego zasobu i aktualizacji ustawień
-  dostępu.
-page_help_settings_project: '**Ustawienia projektu** — globalne opcje konfiguracji projektu.'
+  **Szczegóły pliku** — Formularz do zarządzania metadanymi plików, edycji oryginalnego zasobu i aktualizacji ustawień dostępu.
+page_help_settings_project: "**Ustawienia projektu** — globalne opcje konfiguracji projektu."
 page_help_settings_datamodel_collections: >-
-  **Model danych: Kolekcje** — Lista wszystkich dostępnych kolekcji. Obejmuje to widoczne, ukryte i systemowe kolekcje,
-  jak również niezarządzane tabele bazy danych, które mogą być dodane.
+  **Model danych: Kolekcje** — Lista wszystkich dostępnych kolekcji. Obejmuje to widoczne, ukryte i systemowe kolekcje, jak również niezarządzane tabele bazy danych, które mogą być dodane.
 page_help_settings_datamodel_fields: >-
   **Model danych: Zbieranie** — Formularz do zarządzania tą kolekcją i jej polami.
-page_help_settings_roles_collection:
-  '**Przeglądaj role** — Wyświetla role administratora, publiczne i niestandardowe role użytkowników.'
-page_help_settings_roles_item: '**Szczegóły roli** - Zarządzaj uprawnieniami ról i innymi ustawieniami.'
+page_help_settings_roles_collection: '**Przeglądaj role** — Wyświetla role administratora, publiczne i niestandardowe role użytkowników.'
+page_help_settings_roles_item: "**Szczegóły roli** - Zarządzaj uprawnieniami ról i innymi ustawieniami."
 page_help_settings_presets_collection: >-
-  **Przeglądaj ustawienia** — wyświetla wszystkie ustawienia predefiniowane w projekcie, w tym: użytkownik, role,
-  globalne zakładki, a także widoki domyślne.
+  **Przeglądaj ustawienia** — wyświetla wszystkie ustawienia predefiniowane w projekcie, w tym: użytkownik, role, globalne zakładki, a także widoki domyślne.
 page_help_settings_presets_item: >-
   **Ustawienia szczegółów** — Formularz do zarządzania zakładkami i domyślnymi ustawieniami kolekcji.
-page_help_settings_webhooks_collection:
-  '**Przeglądaj Webhooks** — zawiera listę wszystkich webhooków w ramach projektu.'
+page_help_settings_webhooks_collection: '**Przeglądaj Webhooks** — zawiera listę wszystkich webhooków w ramach projektu.'
 page_help_settings_webhooks_item: '**Szczegóły Webhook** — Formularz do tworzenia i zarządzania webhookami projektu.'
-page_help_users_collection: '**Katalog Użytkownika** — Lista wszystkich użytkowników systemu w tym projekcie.'
+page_help_users_collection: '**Katalog Użytkowników** — Lista wszystkich użytkowników systemu w tym projekcie.'
 page_help_users_item: >-
   **Szczegóły użytkownika** — Zarządzaj informacjami o koncie lub zobacz szczegóły innych użytkowników.
 activity_feed: Kanał aktywności
@@ -677,8 +679,7 @@ all: Wszystkie
 none: Brak
 no_layout_collection_selected_yet: Nie wybrano jeszcze żadnego układu/kolekcji
 batch_delete_confirm: >-
-  Żaden element nie został zaznaczony | Na pewno chcesz usunąć ten element? Tej akcji nie będzie można cofnąć. | Na
-  pewno chcesz usunąć {count} elementów? Tej akcji nie będzie można cofnąć.
+  Żaden element nie został zaznaczony | Na pewno chcesz usunąć ten element? Tej akcji nie będzie można cofnąć. | Na pewno chcesz usunąć {count} elementów? Tej akcji nie będzie można cofnąć.
 cancel: Anuluj
 collection: Kolekcja
 collections: Kolekcje
@@ -797,9 +798,17 @@ save_current_datetime: Zapisz bieżącą datę/czas
 block: Zablokuj
 inline: W lini
 comment: Komentarz
+relational_triggers: Wyzwalacze relacji
+referential_action_field_label_m2o: Po usunięciu {collection}...
+referential_action_field_label_o2m: Po odznaczeniu {collection}...
+referential_action_no_action: Zapobiegaj usunięciu
+referential_action_cascade: Usuń {collection} element (kaskada)
+referential_action_set_null: Pola oznaczone jako bez wartości {field}
+referential_action_set_default: Ustaw {field} na wartość domyślną
+choose_action: Wybierz akcję
 continue: Kontynuuj
 continue_as: >-
-  <b>{name}</b> jest obecnie uwierzytelniony. Jeśli rozpoznajesz to konto, naciśnij przycisk Kontynuuj.
+  {name} jest obecnie uwierzytelniony. Jeśli rozpoznajesz to konto, naciśnij przycisk Kontynuuj.
 editing_role: 'Rola {role}'
 creating_webhook: Tworzenie Webhooka
 default: Domyślnie
@@ -847,7 +856,7 @@ select_existing: Wybierz istniejące
 select_field_type: Wybierz typ pola
 select_interface: Wybierz interfejs
 settings: Ustawienia
-sign_in: Zarejestruj się
+sign_in: Zaloguj się
 sign_out: Wyloguj się
 sign_out_confirm: Na pewno chcesz się wylogować?
 something_went_wrong: Coś poszło nie tak.
@@ -858,7 +867,6 @@ template: Szablon
 translation: Tłumaczenia
 value: Wartość
 view_project: Zobacz projekt
-weeks: { }
 report_error: Zgłoś błąd
 interfaces:
   presentation-links:
@@ -876,12 +884,17 @@ interfaces:
     allow_other: Zezwól na inne
     show_more: 'Pokaż {count} więcej'
     items_shown: Wyświetlane elementy
+  select-multiple-checkbox-tree:
+    name: Pola wyboru (Tree)
+    description: Wybierz pomiędzy wieloma opcjami za pomocą pól wyboru
+    value_combining: Połączenie wartości
+    value_combining_note: Kontroluje wartość zapisaną podczas zagnieżdżonych wyborów.
   input-code:
     code: Kod
     description: Zapisz lub udostępnij kod snippeta
     line_number: Numer linii
     placeholder: Wprowadź kod tutaj...
-  collection:
+  system-collection:
     collection: Kolekcja
     description: Wybierz pomiędzy istniejącymi kolekcjami
     include_system_collections: Dołącz kolekcje systemowe
@@ -915,9 +928,9 @@ interfaces:
     inline_title: Tytuł w linii
     inline_title_label: Pokaż tytuł w linii
     margin_top: Margines górny
-    margin_top_label: Zwiększ górny margines
+    margin_top_label: Zwiększ margines górny
   select-dropdown:
-    description: Wybierz ikonę z rozwijanej listy
+    description: Wybierz wartość z listy rozwijanej
     choices_placeholder: Dodaj nowy wybór
     allow_other: Zezwól na inne
     allow_other_label: Zezwalaj na inne wartości
@@ -968,23 +981,19 @@ interfaces:
     customSyntax_add: Dodaj własną składnię
     box: Blok / Inline
     imageToken: Token obrazu
-    imageToken_label: Jaki (statyczny) token dodać do źródeł obrazu
+    imageToken_label: Jaki (statyczny) token dodać do źródeł obrazów
   presentation-notice:
     notice: Informacja
     description: Wyświetl krótką informacje
     text: Wprowadź zawartość informacji...
-  numeric:
-    numeric: Numeryczne
-    description: Wprowadź liczbę
-    minimum_value: Wartość minimalna
-    maximum_value: Wartość maksymalna
-    step_interval: Czas kroku
   list-o2m:
     one-to-many: Jeden do wielu
     description: Wybierz wiele powiązanych elementów
     no_collection: Kolekcja nie została znaleziona
+  system-folder:
+    folder: Folder
   select-radio:
-    radio-buttons: Przyciski jednokrotnego wyboru
+    radio-buttons: Pola wyboru
     description: Wybierz jeden lub wiele obiektów
   list:
     repeater: Powtarzaj
@@ -1012,17 +1021,22 @@ interfaces:
     alphabetize_label: Wymuś kolejność alfabetyczną
     add_tags: Dodaj tagi...
   input:
-    text-input: Pole tekstowe
-    description: Wprowadź pojedynczą linię tekstu
+    input: Wprowadź
+    description: Ręcznie wprowadź wartość
     trim: Przytnij
     trim_label: Przytnij początek i koniec
     mask: Zamaskowany
     mask_label: Ukryj rzeczywistą wartość
     clear: Wyczyść wartość
     clear_label: Zapisz jako pusty ciąg
+    minimum_value: Wartość minimalna
+    maximum_value: Maksymalna Wartość
+    step_interval: Czas kroku
+    slug: Slugify
+    slug_label: Bezpieczny URL wprowadzonej wartości
   input-multiline:
     textarea: Obszar tekstowy
-    description: Wprowadź wieloliniowy tekst
+    description: Wprowadź wieloliniowy zwykły tekst
   boolean:
     toggle: Przełącz
     description: Przełącz między włącz/wyłącz
@@ -1055,6 +1069,9 @@ interfaces:
     value_path: Ścieżka bazowa
     trigger: Wyzwalacz
     rate: Oceń
+  group-raw:
+    name: Surowe pola
+    description: Pokaż pola jako normalne.
 displays:
   boolean:
     boolean: Wartość logiczna
@@ -1080,8 +1097,7 @@ displays:
     description: Wyświetlaj wartości związane z czasem
     format: Formatowanie
     format_note: >-
-      Niestandardowy format akceptuje __[tabelę symboli daty w polu
-      daty](https://www.unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table)__
+      Niestandardowy format akceptuje __[tabelę symboli daty w polu daty](https://www.unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table)__
     long: Długi
     short: Krótki
     relative: Względny

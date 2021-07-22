@@ -1,7 +1,8 @@
 import { Knex } from 'knex';
 import { clone, cloneDeep, merge, pick, without } from 'lodash';
-import cache from '../cache';
-import database from '../database';
+import { getCache } from '../cache';
+import Keyv from 'keyv';
+import getDatabase from '../database';
 import runAST from '../database/run-ast';
 import emitter, { emitAsyncSafe } from '../emitter';
 import env from '../env';
@@ -52,13 +53,15 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 	accountability: Accountability | null;
 	eventScope: string;
 	schema: SchemaOverview;
+	cache: Keyv<any> | null;
 
 	constructor(collection: string, options: AbstractServiceOptions) {
 		this.collection = collection;
-		this.knex = options.knex || database;
+		this.knex = options.knex || getDatabase();
 		this.accountability = options.accountability || null;
 		this.eventScope = this.collection.startsWith('directus_') ? this.collection.substring(9) : 'items';
 		this.schema = options.schema;
+		this.cache = getCache().cache;
 
 		return this;
 	}
@@ -204,12 +207,12 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 				schema: this.schema,
 				// This hook is called async. If we would pass the transaction here, the hook can be
 				// called after the transaction is done #5460
-				database: database,
+				database: getDatabase(),
 			});
 		}
 
-		if (cache && env.CACHE_AUTO_PURGE && opts?.autoPurgeCache !== false) {
-			await cache.clear();
+		if (this.cache && env.CACHE_AUTO_PURGE && opts?.autoPurgeCache !== false) {
+			await this.cache.clear();
 		}
 
 		return primaryKey;
@@ -236,8 +239,8 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 			return primaryKeys;
 		});
 
-		if (cache && env.CACHE_AUTO_PURGE && opts?.autoPurgeCache !== false) {
-			await cache.clear();
+		if (this.cache && env.CACHE_AUTO_PURGE && opts?.autoPurgeCache !== false) {
+			await this.cache.clear();
 		}
 
 		return primaryKeys;
@@ -275,6 +278,17 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 		if (records === null) {
 			throw new ForbiddenException();
 		}
+
+		emitAsyncSafe(`${this.eventScope}.read`, {
+			event: `${this.eventScope}.read`,
+			accountability: this.accountability,
+			collection: this.collection,
+			query,
+			action: 'read',
+			payload: records,
+			schema: this.schema,
+			database: getDatabase(),
+		});
 
 		return records as Item[];
 	}
@@ -329,6 +343,7 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 		};
 
 		const results = await this.readByQuery(queryWithKeys, opts);
+
 		return results;
 	}
 
@@ -350,6 +365,8 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 		// permissions check for the keys, so we don't have to make this an authenticated read
 		const itemsToUpdate = await itemsService.readByQuery(readQuery);
 		const keys: PrimaryKey[] = itemsToUpdate.map((item: AnyItem) => item[primaryKeyField]).filter((pk) => pk);
+
+		if (keys.length === 0) return [];
 
 		return await this.updateMany(keys, data, opts);
 	}
@@ -499,8 +516,8 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 			}
 		});
 
-		if (cache && env.CACHE_AUTO_PURGE && opts?.autoPurgeCache !== false) {
-			await cache.clear();
+		if (this.cache && env.CACHE_AUTO_PURGE && opts?.autoPurgeCache !== false) {
+			await this.cache.clear();
 		}
 
 		if (opts?.emitEvents !== false) {
@@ -514,7 +531,7 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 				schema: this.schema,
 				// This hook is called async. If we would pass the transaction here, the hook can be
 				// called after the transaction is done #5460
-				database: database,
+				database: getDatabase(),
 			});
 		}
 
@@ -557,15 +574,15 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 			const primaryKeys: PrimaryKey[] = [];
 
 			for (const payload of payloads) {
-				const primaryKey = await service.upsertOne(payload, { autoPurgeCache: false });
+				const primaryKey = await service.upsertOne(payload, { ...(opts || {}), autoPurgeCache: false });
 				primaryKeys.push(primaryKey);
 			}
 
 			return primaryKeys;
 		});
 
-		if (cache && env.CACHE_AUTO_PURGE && opts?.autoPurgeCache !== false) {
-			await cache.clear();
+		if (this.cache && env.CACHE_AUTO_PURGE && opts?.autoPurgeCache !== false) {
+			await this.cache.clear();
 		}
 
 		return primaryKeys;
@@ -574,7 +591,7 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 	/**
 	 * Delete multiple items by query
 	 */
-	async deleteByQuery(query: Query): Promise<PrimaryKey[]> {
+	async deleteByQuery(query: Query, opts?: MutationOptions): Promise<PrimaryKey[]> {
 		const primaryKeyField = this.schema.collections[this.collection].primary;
 		const readQuery = cloneDeep(query);
 		readQuery.fields = [primaryKeyField];
@@ -587,7 +604,10 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 
 		const itemsToDelete = await itemsService.readByQuery(readQuery);
 		const keys: PrimaryKey[] = itemsToDelete.map((item: AnyItem) => item[primaryKeyField]);
-		return await this.deleteMany(keys);
+
+		if (keys.length === 0) return [];
+
+		return await this.deleteMany(keys, opts);
 	}
 
 	/**
@@ -645,8 +665,8 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 			}
 		});
 
-		if (cache && env.CACHE_AUTO_PURGE && opts?.autoPurgeCache !== false) {
-			await cache.clear();
+		if (this.cache && env.CACHE_AUTO_PURGE && opts?.autoPurgeCache !== false) {
+			await this.cache.clear();
 		}
 
 		if (opts?.emitEvents !== false) {
@@ -660,7 +680,7 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 				schema: this.schema,
 				// This hook is called async. If we would pass the transaction here, the hook can be
 				// called after the transaction is done #5460
-				database: database,
+				database: getDatabase(),
 			});
 		}
 
@@ -689,6 +709,11 @@ export class ItemsService<Item extends AnyItem = AnyItem> implements AbstractSer
 			}
 
 			for (const [name, field] of fields) {
+				if (this.schema.collections[this.collection].primary === name) {
+					defaults[name] = null;
+					continue;
+				}
+
 				defaults[name] = field.defaultValue;
 			}
 

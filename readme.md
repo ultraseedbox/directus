@@ -24,10 +24,7 @@ Directus is a real-time API and App dashboard for managing SQL database content.
 
 This is _pre-release_ software. While we're providing migrations between versions, changes may occur at any time, and
 certain features might be missing or broken. You can follow along with
-[the issue tracker](https://github.com/directus/directus/issues) for an in-depth list of upcoming enhancements, with the
-following notable features still under development:
-
-- [ ] Import/Export Endpoints
+[the issue tracker](https://github.com/directus/directus/issues) for an in-depth list of upcoming enhancements.
 
 <br>
 
@@ -51,32 +48,23 @@ important to keep your projects up-to-date.
 
 <br>
 
-## :rocket: Deploy on Platform.sh
+## :rocket: One-Click Deployments
 
-An empty [Directus project](https://github.com/platformsh-templates/directus) repository is maintained by
-[Platform.sh](https://platform.sh) that you can quickly deploy using the button below.
+If you would like to completely avoid the manual installation process, the following self-hosted one-click apps will
+handle the heavy-lifting for you. While Directus is always completely free, you will likely need to pay for these
+services.
 
-<p align="center">
-<a href="https://console.platform.sh/projects/create-project?template=https://raw.githubusercontent.com/platformsh/template-builder/master/templates/directus/.platform.template.yaml&utm_content=directus&utm_source=github&utm_medium=button&utm_campaign=deploy_on_platform">
-    <img src="https://platform.sh/images/deploy/lg-blue.svg" alt="Deploy on Platform.sh" width="180px" />
-</a>
-</p>
+| DigitalOcean                                                                                                                            | Heroku                                                                                                                                                                                              | Platform.sh                                                                                                                                                                                                                                                                                                                                                                             | Zeet                                                                                                                                                                               |
+| --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| <a href="https://marketplace.digitalocean.com/apps/directus"><img src="https://www.deploytodo.com/do-btn-blue.svg" width="180px" /></a> | <a href="https://heroku.com/deploy?template=https://github.com/directus-community/heroku-template"><img src="https://www.herokucdn.com/deploy/button.svg" alt="Deploy on Heroku" width="180px"></a> | <a href="https://console.platform.sh/projects/create-project?template=https://raw.githubusercontent.com/platformsh/template-builder/master/templates/directus/.platform.template.yaml&utm_content=directus&utm_source=github&utm_medium=button&utm_campaign=deploy_on_platform"><img src="https://platform.sh/images/deploy/lg-blue.svg" alt="Deploy on Platform.sh" width="180px"></a> | <a href="https://deploy.zeet.co/?url=https://github.com/directus-community/heroku-template"><img src="https://deploy.zeet.co/directus.svg" alt="Deploy on Zeet" width="180px"></a> |
 
-## :rocket: Deploy on Heroku
-
-You can quickly deploy a project on Heroku using our community maintained template.
-
-<p align="center">
-    <a href="https://heroku.com/deploy?template=https://github.com/directus-community/heroku-template">
-        <img src="https://www.herokucdn.com/deploy/button.svg" alt="Deploy">
-    </a>
-</p>
+<br>
 
 ## 📌 Requirements
 
 Directus only requires Node.js and supports most operating systems and SQL database vendors.
 
-- Node.js 10+
+- Node.js 12.20+
 - npm 6.x+
 
 #### Supported Databases
@@ -109,7 +97,7 @@ channels:
 
 - [Discord](https://directus.chat) (Live Discussions)
 - [GitHub Issues](https://github.com/directus/directus/issues) (Report Bugs)
-- [GitHub Discussions](https://github.com/directus/directus/discussions/category_choices) (Questions, Feature Requests)
+- [GitHub Discussions](https://github.com/directus/directus/discussions) (Questions, Feature Requests)
 - [Twitter](https://twitter.com/directus) (Latest News)
 - [YouTube](https://www.youtube.com/c/DirectusVideos/featured) (Video Tutorials)
 

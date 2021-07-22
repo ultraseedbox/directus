@@ -6,15 +6,15 @@ import os from 'os';
 import { performance } from 'perf_hooks';
 // @ts-ignore
 import { version } from '../../package.json';
-import cache from '../cache';
-import database, { hasDatabaseConnection } from '../database';
+import { getCache } from '../cache';
+import getDatabase, { hasDatabaseConnection } from '../database';
 import env from '../env';
 import logger from '../logger';
 import { rateLimiter } from '../middleware/rate-limiter';
 import storage from '../storage';
 import { AbstractServiceOptions, Accountability, SchemaOverview } from '../types';
 import { toArray } from '../utils/to-array';
-import mailer from './mailer';
+import getMailer from '../mailer';
 import { SettingsService } from './settings';
 
 export class ServerService {
@@ -24,7 +24,7 @@ export class ServerService {
 	schema: SchemaOverview;
 
 	constructor(options: AbstractServiceOptions) {
-		this.knex = options.knex || database;
+		this.knex = options.knex || getDatabase();
 		this.accountability = options.accountability || null;
 		this.schema = options.schema;
 		this.settingsService = new SettingsService({ knex: this.knex, schema: this.schema });
@@ -129,6 +129,7 @@ export class ServerService {
 		}
 
 		async function testDatabase(): Promise<Record<string, HealthCheck[]>> {
+			const database = getDatabase();
 			const client = env.DB_CLIENT;
 
 			const checks: Record<string, HealthCheck[]> = {};
@@ -187,6 +188,8 @@ export class ServerService {
 			if (env.CACHE_ENABLED !== true) {
 				return {};
 			}
+
+			const { cache } = getCache();
 
 			const checks: Record<string, HealthCheck[]> = {
 				'cache:responseTime': [
@@ -315,8 +318,10 @@ export class ServerService {
 				],
 			};
 
+			const mailer = getMailer();
+
 			try {
-				await mailer?.verify();
+				await mailer.verify();
 			} catch (err) {
 				checks['email:connection'][0].status = 'error';
 				checks['email:connection'][0].output = err;

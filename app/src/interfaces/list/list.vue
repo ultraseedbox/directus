@@ -1,38 +1,40 @@
 <template>
 	<div class="repeater">
 		<v-notice v-if="!value || value.length === 0">
-			{{ $t('no_items') }}
+			{{ t('no_items') }}
 		</v-notice>
 
 		<v-list v-if="value && value.length > 0">
-			<draggable :force-fallback="true" :value="value" @input="$emit('input', $event)" handler=".drag-handle">
-				<v-list-item
-					:dense="value.length > 4"
-					v-for="(item, index) in value"
-					:key="item.id"
-					block
-					@click="active = index"
-				>
-					<v-icon name="drag_handle" class="drag-handle" left @click.stop="() => {}" />
-					<render-template :fields="fields" :item="item" :template="templateWithDefaults" />
-					<div class="spacer" />
-					<v-icon v-if="!disabled" name="close" @click.stop="removeItem(item)" />
-				</v-list-item>
+			<draggable
+				:force-fallback="true"
+				:model-value="value"
+				item-key="id"
+				handle=".drag-handle"
+				@update:model-value="$emit('input', $event)"
+			>
+				<template #item="{ element, index }">
+					<v-list-item :dense="value.length > 4" block @click="active = index">
+						<v-icon name="drag_handle" class="drag-handle" left @click.stop="() => {}" />
+						<render-template :fields="fields" :item="element" :template="templateWithDefaults" />
+						<div class="spacer" />
+						<v-icon v-if="!disabled" name="close" @click.stop="removeItem(element)" />
+					</v-list-item>
+				</template>
 			</draggable>
 		</v-list>
-		<v-button @click="addNew" class="add-new" v-if="showAddNew">
+		<v-button v-if="showAddNew" class="add-new" @click="addNew">
 			{{ addLabel }}
 		</v-button>
 
 		<v-drawer
-			:active="drawerOpen"
-			@toggle="closeDrawer()"
+			:model-value="drawerOpen"
 			:title="displayValue || headerPlaceholder"
 			persistent
+			@update:model-value="closeDrawer()"
 			@cancel="closeDrawer()"
 		>
 			<template #actions>
-				<v-button @click="closeDrawer()" icon rounded v-tooltip.bottom="$t('save')">
+				<v-button v-tooltip.bottom="t('save')" icon rounded @click="closeDrawer()">
 					<v-icon name="check" />
 				</v-button>
 			</template>
@@ -41,9 +43,9 @@
 				<v-form
 					:disabled="disabled"
 					:fields="fields"
-					:edits="activeItem"
+					:model-value="activeItem"
 					primary-key="+"
-					@input="updateValues(active, $event)"
+					@update:model-value="updateValues(active, $event)"
 				/>
 			</div>
 		</v-drawer>
@@ -51,10 +53,11 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, computed, ref, toRefs } from '@vue/composition-api';
-import { Field } from '@/types';
+import { useI18n } from 'vue-i18n';
+import { defineComponent, PropType, computed, ref, toRefs } from 'vue';
+import { Field } from '@directus/shared/types';
 import Draggable from 'vuedraggable';
-import i18n from '@/lang';
+import { i18n } from '@/lang';
 import { renderStringTemplate } from '@/utils/render-string-template';
 import hideDragImage from '@/utils/hide-drag-image';
 
@@ -75,7 +78,7 @@ export default defineComponent({
 		},
 		addLabel: {
 			type: String,
-			default: i18n.t('create_new'),
+			default: i18n.global.t('create_new'),
 		},
 		limit: {
 			type: Number,
@@ -87,14 +90,17 @@ export default defineComponent({
 		},
 		headerPlaceholder: {
 			type: String,
-			default: i18n.t('empty_item'),
+			default: i18n.global.t('empty_item'),
 		},
 		collection: {
 			type: String,
 			default: null,
 		},
 	},
+	emits: ['input'],
 	setup(props, { emit }) {
+		const { t } = useI18n();
+
 		const active = ref<number | null>(null);
 		const drawerOpen = computed(() => active.value !== null);
 		const { value } = toRefs(props);
@@ -114,6 +120,7 @@ export default defineComponent({
 		const { displayValue } = renderStringTemplate(templateWithDefaults, activeItem);
 
 		return {
+			t,
 			updateValues,
 			removeItem,
 			addNew,

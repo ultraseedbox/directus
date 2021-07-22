@@ -1,9 +1,9 @@
 import SchemaInspector from '@directus/schema';
 import { Knex } from 'knex';
 import { Column } from 'knex-schema-inspector/dist/types/column';
-import cache from '../cache';
+import { getCache } from '../cache';
 import { ALIAS_TYPES } from '../constants';
-import database, { schemaInspector } from '../database';
+import getDatabase, { getSchemaInspector } from '../database';
 import { systemFieldRows } from '../database/system-data/fields/';
 import emitter, { emitAsyncSafe } from '../emitter';
 import env from '../env';
@@ -17,6 +17,9 @@ import getDefaultValue from '../utils/get-default-value';
 import getLocalType from '../utils/get-local-type';
 import { toArray } from '../utils/to-array';
 import { isEqual } from 'lodash';
+import { RelationsService } from './relations';
+import Keyv from 'keyv';
+import { DeepPartial } from '@directus/shared/types';
 
 export type RawField = DeepPartial<Field> & { field: string; type: typeof types[number] };
 
@@ -25,16 +28,22 @@ export class FieldsService {
 	accountability: Accountability | null;
 	itemsService: ItemsService;
 	payloadService: PayloadService;
-	schemaInspector: typeof schemaInspector;
+	schemaInspector: ReturnType<typeof SchemaInspector>;
 	schema: SchemaOverview;
+	cache: Keyv<any> | null;
+	schemaCache: Keyv<any> | null;
 
 	constructor(options: AbstractServiceOptions) {
-		this.knex = options.knex || database;
-		this.schemaInspector = options.knex ? SchemaInspector(options.knex) : schemaInspector;
+		this.knex = options.knex || getDatabase();
+		this.schemaInspector = options.knex ? SchemaInspector(options.knex) : getSchemaInspector();
 		this.accountability = options.accountability || null;
 		this.itemsService = new ItemsService('directus_fields', options);
 		this.payloadService = new PayloadService('directus_fields', options);
 		this.schema = options.schema;
+
+		const { cache, schemaCache } = getCache();
+		this.cache = cache;
+		this.schemaCache = schemaCache;
 	}
 
 	private get hasReadAccess() {
@@ -243,8 +252,12 @@ export class FieldsService {
 			}
 		});
 
-		if (cache && env.CACHE_AUTO_PURGE) {
-			await cache.clear();
+		if (this.cache && env.CACHE_AUTO_PURGE) {
+			await this.cache.clear();
+		}
+
+		if (this.schemaCache) {
+			await this.schemaCache.clear();
 		}
 	}
 
@@ -290,8 +303,12 @@ export class FieldsService {
 			}
 		}
 
-		if (cache && env.CACHE_AUTO_PURGE) {
-			await cache.clear();
+		if (this.cache && env.CACHE_AUTO_PURGE) {
+			await this.cache.clear();
+		}
+
+		if (this.schemaCache) {
+			await this.schemaCache.clear();
 		}
 
 		return field.field;
@@ -314,62 +331,93 @@ export class FieldsService {
 			database: this.knex,
 		});
 
-		await this.knex('directus_fields').delete().where({ collection, field });
-
-		if (
-			this.schema.collections[collection] &&
-			field in this.schema.collections[collection].fields &&
-			this.schema.collections[collection].fields[field].alias === false
-		) {
-			await this.knex.schema.table(collection, (table) => {
-				table.dropColumn(field);
+		await this.knex.transaction(async (trx) => {
+			const relations = this.schema.relations.filter((relation) => {
+				return (
+					(relation.collection === collection && relation.field === field) ||
+					(relation.related_collection === collection && relation.meta?.one_field === field)
+				);
 			});
-		}
 
-		const relations = this.schema.relations.filter((relation) => {
-			return (
-				(relation.many_collection === collection && relation.many_field === field) ||
-				(relation.one_collection === collection && relation.one_field === field)
-			);
+			const relationsService = new RelationsService({
+				knex: trx,
+				accountability: this.accountability,
+				schema: this.schema,
+			});
+
+			const fieldsService = new FieldsService({
+				knex: trx,
+				accountability: this.accountability,
+				schema: this.schema,
+			});
+
+			for (const relation of relations) {
+				const isM2O = relation.collection === collection && relation.field === field;
+
+				// If the current field is a m2o, delete the related o2m if it exists and remove the relationship
+				if (isM2O) {
+					await relationsService.deleteOne(collection, field);
+
+					if (relation.related_collection && relation.meta?.one_field) {
+						await fieldsService.deleteField(relation.related_collection, relation.meta.one_field);
+					}
+				}
+
+				// If the current field is a o2m, just delete the one field config from the relation
+				if (!isM2O && relation.meta?.one_field) {
+					await trx('directus_relations')
+						.update({ one_field: null })
+						.where({ many_collection: relation.collection, many_field: relation.field });
+				}
+			}
+
+			const collectionMeta = await trx
+				.select('archive_field', 'sort_field')
+				.from('directus_collections')
+				.where({ collection })
+				.first();
+
+			const collectionMetaUpdates: Record<string, null> = {};
+
+			if (collectionMeta?.archive_field === field) {
+				collectionMetaUpdates.archive_field = null;
+			}
+
+			if (collectionMeta?.sort_field === field) {
+				collectionMetaUpdates.sort_field = null;
+			}
+
+			if (Object.keys(collectionMetaUpdates).length > 0) {
+				await trx('directus_collections').update(collectionMetaUpdates).where({ collection });
+			}
+
+			// Cleanup directus_fields
+			const metaRow = await trx.select('id').from('directus_fields').where({ collection, field }).first();
+
+			if (metaRow?.id) {
+				// Handle recursive FK constraints
+				await trx('directus_fields').update({ group: null }).where({ group: metaRow.id });
+			}
+
+			await trx('directus_fields').delete().where({ collection, field });
+
+			if (
+				this.schema.collections[collection] &&
+				field in this.schema.collections[collection].fields &&
+				this.schema.collections[collection].fields[field].alias === false
+			) {
+				await trx.schema.table(collection, (table) => {
+					table.dropColumn(field);
+				});
+			}
 		});
 
-		for (const relation of relations) {
-			const isM2O = relation.many_collection === collection && relation.many_field === field;
-
-			/** @TODO M2A — Handle m2a case here */
-
-			if (isM2O) {
-				await this.knex('directus_relations').delete().where({ many_collection: collection, many_field: field });
-				await this.deleteField(relation.one_collection!, relation.one_field!);
-			} else {
-				await this.knex('directus_relations')
-					.update({ one_field: null })
-					.where({ one_collection: collection, one_field: field });
-			}
+		if (this.cache && env.CACHE_AUTO_PURGE) {
+			await this.cache.clear();
 		}
 
-		const collectionMeta = await this.knex
-			.select('archive_field', 'sort_field')
-			.from('directus_collections')
-			.where({ collection })
-			.first();
-
-		const collectionMetaUpdates: Record<string, null> = {};
-
-		if (collectionMeta?.archive_field === field) {
-			collectionMetaUpdates.archive_field = null;
-		}
-
-		if (collectionMeta?.sort_field === field) {
-			collectionMetaUpdates.sort_field = null;
-		}
-
-		if (Object.keys(collectionMetaUpdates).length > 0) {
-			await this.knex('directus_collections').update(collectionMetaUpdates).where({ collection });
-		}
-
-		if (cache && env.CACHE_AUTO_PURGE) {
-			await cache.clear();
+		if (this.schemaCache) {
+			await this.schemaCache.clear();
 		}
 
 		emitAsyncSafe(`fields.delete`, {
@@ -432,7 +480,7 @@ export class FieldsService {
 		}
 
 		if (field.schema?.is_primary_key) {
-			column.primary();
+			column.primary().notNullable();
 		}
 
 		if (alter) {

@@ -2,14 +2,16 @@
 
 import { FormField } from '@/components/v-form/types';
 import { getInterfaces } from '@/interfaces';
-import { InterfaceConfig } from '@/interfaces/types';
-import { Field } from '@/types';
+import { Field, InterfaceConfig } from '@directus/shared/types';
 import { getDefaultInterfaceForType } from '@/utils/get-default-interface-for-type';
-import { computed, ComputedRef, Ref } from '@vue/composition-api';
-import { clone } from 'lodash';
+import { clone, orderBy } from 'lodash';
+import { computed, ComputedRef, Ref } from 'vue';
+import { translate } from '@/utils/translate-object-values';
 
-export default function useFormFields(fields: Ref<Field[]>): { formFields: ComputedRef } {
+export default function useFormFields(fields: Ref<Field[]>): { formFields: ComputedRef<Field[]> } {
 	const { interfaces } = getInterfaces();
+
+	const systemFieldsCount = computed(() => fields.value.filter((field) => field.meta?.system === true).length);
 
 	const formFields = computed(() => {
 		let formFields = clone(fields.value);
@@ -42,6 +44,10 @@ export default function useFormFields(fields: Ref<Field[]>): { formFields: Compu
 				}
 			}
 
+			if (field.meta?.sort && field.meta?.system !== true) {
+				field.meta.sort = field.meta.sort + systemFieldsCount.value;
+			}
+
 			return field;
 		});
 
@@ -51,6 +57,10 @@ export default function useFormFields(fields: Ref<Field[]>): { formFields: Compu
 			const systemFake = field.field?.startsWith('$') || false;
 			return hidden !== true && systemFake === false;
 		});
+
+		formFields = orderBy(formFields, 'meta.sort');
+
+		formFields = translate(formFields);
 
 		return formFields;
 	});

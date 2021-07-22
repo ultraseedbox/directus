@@ -1,6 +1,6 @@
 <template>
-	<v-notice type="warning" v-if="relation.many_collection !== relation.one_collection">
-		{{ $t('interfaces.list-o2m-tree-view.recursive_only') }}
+	<v-notice v-if="relation.collection !== relation.related_collection" type="warning">
+		{{ t('interfaces.list-o2m-tree-view.recursive_only') }}
 	</v-notice>
 
 	<div v-else class="tree-view">
@@ -9,18 +9,18 @@
 			:collection="collection"
 			:tree="stagedValues || []"
 			:primary-key-field="primaryKeyField.field"
-			:children-field="relation.one_field"
-			:parent-field="relation.many_field"
+			:children-field="relation.meta.one_field"
+			:parent-field="relation.field"
 			:disabled="disabled"
 			root
 			@change="onDraggableChange"
 			@input="emitValue"
 		/>
 
-		<div class="actions" v-if="!disabled">
-			<v-button v-if="enableCreate" @click="addNewActive = true">{{ $t('create_new') }}</v-button>
+		<div v-if="!disabled" class="actions">
+			<v-button v-if="enableCreate" @click="addNewActive = true">{{ t('create_new') }}</v-button>
 			<v-button v-if="enableSelect" @click="selectDrawer = true">
-				{{ $t('add_existing') }}
+				{{ t('add_existing') }}
 			</v-button>
 		</div>
 
@@ -30,32 +30,33 @@
 			:collection="collection"
 			:primary-key="'+'"
 			:edits="{}"
-			:circular-field="relation.many_field"
+			:circular-field="relation.field"
 			@input="addNew"
 			@update:active="addNewActive = false"
 		/>
 
 		<drawer-collection
 			v-if="!disabled"
-			:active.sync="selectDrawer"
+			v-model:active="selectDrawer"
 			:collection="collection"
 			:selection="[]"
 			:filters="selectionFilters"
-			@input="stageSelection"
 			multiple
+			@input="stageSelection"
 		/>
 	</div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, PropType, onMounted, watch } from '@vue/composition-api';
+import { useI18n } from 'vue-i18n';
+import { defineComponent, ref, computed, PropType, onMounted, watch } from 'vue';
 import { useCollection } from '@/composables/use-collection';
 import { useRelationsStore } from '@/stores';
 import api from '@/api';
 import { getFieldsFromTemplate } from '@/utils/get-fields-from-template';
 import hideDragImage from '@/utils/hide-drag-image';
 import NestedDraggable from './nested-draggable.vue';
-import { Filter } from '@/types';
+import { Filter } from '@directus/shared/types';
 import { Relation } from '@/types';
 import DrawerCollection from '@/views/private/components/drawer-collection';
 import DrawerItem from '@/views/private/components/drawer-item';
@@ -96,12 +97,15 @@ export default defineComponent({
 			default: true,
 		},
 	},
+	emits: ['input'],
 	setup(props, { emit }) {
+		const { t } = useI18n();
+
 		const relationsStore = useRelationsStore();
 		const openItems = ref([]);
 
 		const { relation } = useRelation();
-		const { info, primaryKeyField } = useCollection(relation.value.one_collection);
+		const { info, primaryKeyField } = useCollection(relation.value.related_collection!);
 		const { loading, error, stagedValues, fetchValues, emitValue } = useValues();
 
 		const { stageSelection, selectDrawer, selectionFilters } = useSelection();
@@ -117,6 +121,7 @@ export default defineComponent({
 		const dragging = ref(false);
 
 		return {
+			t,
 			relation,
 			openItems,
 			template,
@@ -162,7 +167,7 @@ export default defineComponent({
 						},
 					});
 
-					stagedValues.value = response.data.data?.[relation.value.one_field!] ?? [];
+					stagedValues.value = response.data.data?.[relation.value.meta!.one_field!] ?? [];
 				} catch (err) {
 					error.value = err;
 				} finally {
@@ -172,12 +177,16 @@ export default defineComponent({
 
 			function getFieldsToFetch() {
 				const fields = [
-					...new Set([primaryKeyField.value.field, relation.value.one_field, ...getFieldsFromTemplate(template.value)]),
+					...new Set([
+						primaryKeyField.value.field,
+						relation.value.meta!.one_field,
+						...getFieldsFromTemplate(template.value),
+					]),
 				];
 
 				const result: string[] = [];
 
-				const prefix = `${relation.value.one_field}.`;
+				const prefix = `${relation.value.meta!.one_field}.`;
 
 				for (let i = 1; i <= 5; i++) {
 					for (const field of fields) {
@@ -191,7 +200,7 @@ export default defineComponent({
 			function emitValue(value: Record<string, any>[]) {
 				stagedValues.value = value;
 
-				if (relation.value.sort_field) {
+				if (relation.value.meta?.sort_field) {
 					return emit('input', addSort(value));
 				}
 
@@ -201,8 +210,8 @@ export default defineComponent({
 					return (value || []).map((item, index) => {
 						return {
 							...item,
-							[relation.value.sort_field!]: index,
-							[relation.value.one_field!]: addSort(item[relation.value.one_field!]),
+							[relation.value.meta!.sort_field!]: index,
+							[relation.value.meta!.one_field!]: addSort(item[relation.value.meta!.one_field!]),
 						};
 					});
 				}
@@ -237,7 +246,7 @@ export default defineComponent({
 					for (const value of values) {
 						if (!value[pkField]) continue;
 						pks.push(value[pkField]);
-						const childPKs = getPKs(value[relation.value.one_field!]);
+						const childPKs = getPKs(value[relation.value.meta!.one_field!]);
 						pks.push(...childPKs);
 					}
 
@@ -260,7 +269,7 @@ export default defineComponent({
 					},
 					{
 						key: 'parent',
-						field: relation.value.many_field,
+						field: relation.value.field,
 						operator: 'null',
 						value: true,
 						locked: true,
@@ -276,12 +285,16 @@ export default defineComponent({
 				const selection = newSelection.filter((item) => selectedPrimaryKeys.value.includes(item) === false);
 
 				const fields = [
-					...new Set([primaryKeyField.value.field, relation.value.one_field, ...getFieldsFromTemplate(template.value)]),
+					...new Set([
+						primaryKeyField.value.field,
+						relation.value.meta!.one_field,
+						...getFieldsFromTemplate(template.value),
+					]),
 				];
 
 				const result: string[] = [];
 
-				const prefix = `${relation.value.one_field}.`;
+				const prefix = `${relation.value.meta!.one_field}.`;
 
 				for (let i = 1; i <= 5; i++) {
 					for (const field of fields) {
@@ -322,25 +335,23 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss" scoped>
-::v-deep {
-	ul,
-	li {
-		list-style: none;
-	}
+<style scoped>
+:deep(ul),
+:deep(li) {
+	list-style: none;
+}
 
-	ul {
-		margin-left: 24px;
-		padding-left: 0;
-	}
+:deep(ul) {
+	margin-left: 24px;
+	padding-left: 0;
 }
 
 .actions {
 	margin-top: 12px;
+}
 
-	.v-button + .v-button {
-		margin-left: 12px;
-	}
+.actions .v-button + .v-button {
+	margin-left: 12px;
 }
 
 .existing {

@@ -50,6 +50,7 @@ activity: Aktiviti
 user_directory: Direktori pengguna
 duration: Durasi
 status: Status
+remove: Buang
 bookmarks: Penandabuku
 back: Kembali
 operators:
@@ -80,8 +81,7 @@ keep_editing: Terus Menyunting
 add_new: Tambah Baru
 all: Semua
 batch_delete_confirm: >-
-  Tiada benda dipilih | Adakah anda pasti ingin memadam benda ini? Tindakan ini tidak dapat dibatalkan. | Adakah anda
-  pasti ingin memadam {count} benda ini? Tindakan ini tidak dapat dibatalkan.
+  Tiada benda dipilih | Adakah anda pasti ingin memadam benda ini? Tindakan ini tidak dapat dibatalkan. | Adakah anda pasti ingin memadam {count} benda ini? Tindakan ini tidak dapat dibatalkan.
 cancel: Batal
 collection: Koleksi
 collections: Koleksi-koleksi
@@ -162,7 +162,7 @@ value: Nilai
 interfaces:
   presentation-links:
     primary: Utama
-  collection:
+  system-collection:
     collection: Koleksi
   system-collections:
     collections: Koleksi-koleksi

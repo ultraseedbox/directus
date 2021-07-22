@@ -15,7 +15,6 @@ const querySchema = Joi.object({
 	limit: Joi.number(),
 	offset: Joi.number(),
 	page: Joi.number(),
-	single: Joi.boolean(),
 	meta: Joi.array().items(Joi.string().valid('total_count', 'filter_count')),
 	search: Joi.string(),
 	export: Joi.string().valid('json', 'csv', 'xml'),
@@ -52,6 +51,10 @@ function validateFilter(filter: Query['filter']) {
 				case '_neq':
 				case '_contains':
 				case '_ncontains':
+				case '_starts_with':
+				case '_nstarts_with':
+				case '_ends_with':
+				case '_nends_with':
 				case '_gt':
 				case '_gte':
 				case '_lt':

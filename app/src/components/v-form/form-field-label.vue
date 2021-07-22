@@ -2,21 +2,22 @@
 	<div class="label type-label" :class="{ disabled, edited: edited && !batchMode && !hasError }">
 		<v-checkbox
 			v-if="batchMode"
-			:input-value="batchActive"
+			:model-value="batchActive"
 			:value="field.field"
-			@change="$emit('toggle-batch', field)"
+			@update:model-value="$emit('toggle-batch', field)"
 		/>
-		<span @click="toggle" v-tooltip="edited ? $t('edited') : null">
+		<span v-tooltip="edited ? t('edited') : null" @click="toggle">
 			{{ field.name }}
-			<v-icon class="required" sup name="star" v-if="field.schema && field.schema.is_nullable === false" />
+			<v-icon v-if="field.schema && field.schema.is_nullable === false" class="required" sup name="star" />
 			<v-icon v-if="!disabled" class="ctx-arrow" :class="{ active }" name="arrow_drop_down" />
 		</span>
 	</div>
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType } from '@vue/composition-api';
-import { Field } from '@/types/';
+import { useI18n } from 'vue-i18n';
+import { defineComponent, PropType } from 'vue';
+import { Field } from '@directus/shared/types';
 
 export default defineComponent({
 	props: {
@@ -52,6 +53,11 @@ export default defineComponent({
 			type: Boolean,
 			default: false,
 		},
+	},
+	emits: ['toggle-batch'],
+	setup() {
+		const { t } = useI18n();
+		return { t };
 	},
 });
 </script>
@@ -111,6 +117,7 @@ export default defineComponent({
 			content: '';
 			pointer-events: none;
 		}
+
 		> span {
 			margin-left: -16px;
 			padding-left: 16px;

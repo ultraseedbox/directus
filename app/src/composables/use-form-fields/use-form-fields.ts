@@ -45,17 +45,15 @@ export default function useFormFields(fields: Ref<Field[]>): { formFields: Compu
 			}
 
 			if (field.meta?.sort && field.meta?.system !== true) {
-				field.meta.sort = field.meta.sort + systemFieldsCount.value;
+				field.meta.sort = Number(field.meta.sort) + Number(systemFieldsCount.value);
 			}
 
 			return field;
 		});
 
-		// Filter out the fields that are marked hidden on detail
 		formFields = formFields.filter((field) => {
-			const hidden = field.meta?.hidden;
 			const systemFake = field.field?.startsWith('$') || false;
-			return hidden !== true && systemFake === false;
+			return systemFake === false;
 		});
 
 		formFields = orderBy(formFields, 'meta.sort');
